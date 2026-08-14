@@ -279,7 +279,17 @@
       "removeDecision": "Remove decision",
       "removeDecisionDescription": "Unlink decision and clear all extracted data.",
       "extractionReset": "Extraction reset",
-      "decisionRemoved": "Decision removed"
+      "decisionRemoved": "Decision removed",
+      "unplacedTitle": "Unplaced decisions",
+      "unplacedDescription": "Decisions whose document declares this session, not yet linked to a subject. Assign each to its agenda item, or dismiss ones that do not belong here.",
+      "unplacedSuggestion": "Suggested subject",
+      "unplacedConflict": "Already linked to",
+      "unplacedChooseSubject": "Choose a subject…",
+      "unplacedAssign": "Assign",
+      "unplacedDismiss": "Dismiss",
+      "unplacedAssigned": "Decision assigned",
+      "unplacedDismissed": "Candidate dismissed",
+      "unplacedNoFreeSubjects": "All subjects already have decisions"
     },
     "export": {
       "docx": "Export to DOCX",

@@ -279,7 +279,17 @@
       "removeDecision": "Αφαίρεση απόφασης",
       "removeDecisionDescription": "Αποσύνδεση απόφασης και διαγραφή εξαγόμενων δεδομένων.",
       "extractionReset": "Η εξαγωγή διαγράφηκε",
-      "decisionRemoved": "Η απόφαση αφαιρέθηκε"
+      "decisionRemoved": "Η απόφαση αφαιρέθηκε",
+      "unplacedTitle": "Ατοποθέτητες αποφάσεις",
+      "unplacedDescription": "Αποφάσεις που το έγγραφό τους δηλώνει αυτή τη συνεδρίαση, χωρίς σύνδεση με θέμα. Αντιστοιχίστε τες στο θέμα τους ή απορρίψτε όσες δεν ανήκουν εδώ.",
+      "unplacedSuggestion": "Προτεινόμενο θέμα",
+      "unplacedConflict": "Ήδη συνδεδεμένη με",
+      "unplacedChooseSubject": "Επιλέξτε θέμα…",
+      "unplacedAssign": "Αντιστοίχιση",
+      "unplacedDismiss": "Απόρριψη",
+      "unplacedAssigned": "Η απόφαση αντιστοιχίστηκε",
+      "unplacedDismissed": "Η υποψήφια απορρίφθηκε",
+      "unplacedNoFreeSubjects": "Όλα τα θέματα έχουν ήδη αποφάσεις"
     },
     "export": {
       "docx": "Εξαγωγή σε DOCX",
