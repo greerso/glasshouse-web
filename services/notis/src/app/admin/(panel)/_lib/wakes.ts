@@ -86,7 +86,25 @@ export async function listRecentWakes(filter: WakeFilter, page = 1): Promise<Wak
     orderBy: { createdAt: "desc" },
     skip: (current - 1) * WAKES_PAGE_SIZE,
     take: WAKES_PAGE_SIZE,
-    include: { subscription: { select: { userName: true } } },
+    // Explicit select: without it every row drags its full trace/event/
+    // usage Json along — hundreds of KB per wake, ×100 per page — to
+    // render a dozen scalars. `outcome` stays: the feed needs its
+    // message count.
+    select: {
+      id: true,
+      subscriptionId: true,
+      eventType: true,
+      eventAt: true,
+      decision: true,
+      rationale: true,
+      outcome: true,
+      repairs: true,
+      truncated: true,
+      finishWakeMissing: true,
+      costUsd: true,
+      durationMs: true,
+      subscription: { select: { userName: true } },
+    },
   });
   return {
     entries: wakes.map((wake) => ({
