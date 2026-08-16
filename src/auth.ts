@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "@/lib/db/prisma"
 import authConfig from "@/auth.config"
 import { isRealmApexHost } from "@/lib/realm"
+import { isEmailAllowed } from "@/lib/auth/allowlist"
 
 declare module "next-auth" {
     interface Session {
@@ -22,6 +23,20 @@ declare module "next-auth" {
 export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: PrismaAdapter(prisma),
     callbacks: {
+        /**
+         * Registration is closed: the Resend magic-link + PrismaAdapter combo
+         * otherwise creates a User row for any email that requests a link.
+         * Existing users (created before this gate, or previously allowlisted)
+         * keep access; new sign-ups must be on AUTH_ALLOWED_EMAILS. Returning
+         * false here happens *before* the adapter persists anything for the
+         * email provider, so a rejected email never gets a User row.
+         */
+        async signIn({ user }) {
+            if (!user.email) return false;
+            const existing = await prisma.user.findUnique({ where: { email: user.email } });
+            if (existing) return true;
+            return isEmailAllowed(user.email, process.env.AUTH_ALLOWED_EMAILS);
+        },
         /**
          * Auth.js resolves redirect targets against `NEXTAUTH_URL`'s origin
          * (next-auth rewrites every request's URL to it — `reqWithEnvURL`), so

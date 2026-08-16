@@ -128,7 +128,7 @@ export default function Footer({ className, realm }: FooterProps) {
                                 {[
                                     { href: "https://twitter.com/opencouncil_gr", icon: SiX, label: "X (Twitter): @opencouncil_gr" },
                                     { href: "https://instagram.com/opencouncil_gr", icon: SiInstagram, label: "Instagram: @opencouncil_gr" },
-                                    { href: "https://github.com/schemalabz/opencouncil", icon: SiGithub, label: "GitHub: opencouncil" },
+                                    { href: "https://github.com/greerso/glasshouse-web", icon: SiGithub, label: "GitHub: glasshouse-web" },
                                     { href: "https://discord.gg/VdwtVG43WB", icon: SiDiscord, label: "Discord" },
                                     {
                                         href: "https://www.facebook.com/profile.php?id=61570217107676",
@@ -165,7 +165,7 @@ export default function Footer({ className, realm }: FooterProps) {
                         asChild
                     >
                         <a
-                            href="https://github.com/schemalabz/opencouncil"
+                            href="https://github.com/greerso/glasshouse-web"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2"
@@ -179,6 +179,16 @@ export default function Footer({ className, realm }: FooterProps) {
                     <span>© {new Date().getFullYear()} OpenCouncil</span>
                     <CountrySwitcher realm={realm} />
                     <ScriptSwitcher />
+                    {process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA && (
+                        <a
+                            href={`https://github.com/greerso/glasshouse-web/tree/${process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-primary transition-colors"
+                        >
+                            source@{process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA.slice(0, 7)}
+                        </a>
+                    )}
                 </div>
             </div>
         </footer>
