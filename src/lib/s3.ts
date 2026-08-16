@@ -10,7 +10,8 @@ export const s3Client = new S3Client({
     credentials: {
         accessKeyId: env.DO_SPACES_KEY,
         secretAccessKey: env.DO_SPACES_SECRET,
-    }
+    },
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
 })
 
 // Upload configuration types

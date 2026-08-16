@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/db/prisma";
 import { validateServiceApiKey } from "@/lib/db/apiKeys";
 import { UnauthorizedError } from "@/lib/api/errors";
+import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { type NextRequest } from "next/server";
 
 export async function getCurrentUser() {
@@ -211,6 +212,9 @@ export async function getOrCreateUserFromRequest(
     if (!user) {
         if (!email) {
             return null
+        }
+        if (!isEmailAllowed(email, process.env.AUTH_ALLOWED_EMAILS)) {
+            throw new Error("registration_closed")
         }
         user = await prisma.user.upsert({
             where: { email },
