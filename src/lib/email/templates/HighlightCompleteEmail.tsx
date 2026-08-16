@@ -38,6 +38,27 @@ interface HighlightCompleteCopy {
  * out of it by the proxy's module graph.
  */
 const COPY: Record<EmailLocale, HighlightCompleteCopy> = {
+    en: {
+        subjectSuccess: 'Your highlight is ready!',
+        subjectFailure: 'Problem creating your highlight',
+        headingSuccess: '✓ Your highlight is ready!',
+        headingFailure: '✕ Something went wrong',
+        greeting: (name) => `Hi ${name},`,
+        bodySuccess: 'Your video highlight was created successfully and is ready to watch!',
+        bodyFailure: 'Unfortunately, we ran into a problem creating your video highlight.',
+        detailsHeading: 'Highlight Details',
+        labelTitle: 'Title',
+        labelMeeting: 'Meeting',
+        labelCity: 'City',
+        labelDuration: 'Duration',
+        ctaSuccess: 'View Highlight',
+        ctaFailure: 'Try Again',
+        noteSuccess: 'You can download the video or share it with others from the highlight page.',
+        noteFailure: 'Please try creating the highlight again. If the problem continues, contact us at hello@opencouncil.gr',
+        thanks: 'Thanks for using OpenCouncil!',
+        untitled: 'Untitled',
+        meetingOn: (date) => `Meeting on ${date}`,
+    },
     el: {
         subjectSuccess: 'Το Στιγμιότυπο σας είναι έτοιμο!',
         subjectFailure: 'Πρόβλημα με τη δημιουργία Στιγμιότυπου',

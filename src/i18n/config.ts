@@ -11,7 +11,7 @@ export const LOCALES = ['en', 'el', 'fr', 'sr', 'sr-Latn'] as const;
 
 export type AppLocale = (typeof LOCALES)[number];
 
-export const DEFAULT_LOCALE: AppLocale = 'el';
+export const DEFAULT_LOCALE: AppLocale = 'en';
 
 /**
  * Custom URL prefixes (with leading slash, next-intl's format) for locales

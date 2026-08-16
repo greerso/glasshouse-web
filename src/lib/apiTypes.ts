@@ -18,13 +18,13 @@ export interface TaskRequest {
 // Content language of the city a task runs for. Kept as a self-contained string
 // union (this file is the backend contract and has no Prisma imports); mirrors
 // the Prisma `CityLanguage` enum.
-export type CityLanguage = 'el' | 'fr' | 'sr';
+export type CityLanguage = 'el' | 'fr' | 'sr' | 'en';
 
 // ISO 3166-1 alpha-2 code (uppercase) of the country a task's city is in. The
 // backend restricts geocoding of subject locations to it; without it everything
 // is geocoded as if it were in Greece. Comes from the city's realm, not its
 // language — see `getRealmCountry`.
-export type Country = 'GR' | 'FR' | 'CY' | 'RS';
+export type Country = 'GR' | 'FR' | 'CY' | 'RS' | 'US';
 
 /*
  * System endpoints

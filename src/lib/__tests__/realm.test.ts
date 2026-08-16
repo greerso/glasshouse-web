@@ -1,4 +1,5 @@
 import {
+    REALMS,
     realmForHost,
     createRealmResolver,
     isKnownRealmHost,
@@ -51,6 +52,13 @@ describe('createRealmResolver', () => {
     });
 });
 
+describe('REALMS.us', () => {
+    it('exposes a US realm with English default locale', () => {
+        expect(REALMS.us.defaultLocale).toBe('en');
+        expect(REALMS.us.country).toBe('US');
+    });
+});
+
 describe('realmForHost', () => {
     it('resolves the production apex domains', () => {
         expect(realmForHost('opencouncil.gr')).toBe('greece');
@@ -66,10 +74,10 @@ describe('realmForHost', () => {
         expect(realmForHost('pr-7.preview.opencouncil.rs')).toBe('serbia');
     });
 
-    it.each([null, undefined, '', 'localhost:3000', 'example.com'])(
-        'defaults %p to greece',
+    it.each([null, undefined, '', 'localhost:3000', 'example.com', 'some-unknown-host.example'])(
+        'defaults %p to the us realm',
         (host) => {
-            expect(realmForHost(host)).toBe('greece');
+            expect(realmForHost(host)).toBe('us');
         },
     );
 });
@@ -135,7 +143,7 @@ describe('realmOverride / effectiveRealm', () => {
         expect(realmOverride('pr-7.preview.opencouncil.gr', 'atlantis')).toBeUndefined();
         expect(effectiveRealm('pr-7.preview.opencouncil.gr', 'atlantis')).toBe('greece');
         expect(effectiveRealm('pr-7.preview.opencouncil.fr', undefined)).toBe('france');
-        expect(effectiveRealm('localhost:3000', undefined)).toBe('greece');
+        expect(effectiveRealm('localhost:3000', undefined)).toBe('us');
     });
 });
 
@@ -208,6 +216,7 @@ describe('getRealmContactPhone', () => {
             france: '+30 211 198 0212',
             cyprus: '+30 211 198 0212',
             serbia: '0800 301167',
+            us: 'hello@glasshouse.town',
         });
     });
 });

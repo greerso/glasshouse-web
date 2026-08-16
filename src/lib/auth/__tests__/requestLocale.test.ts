@@ -12,10 +12,10 @@ describe('localeForRequest', () => {
         expect(localeForRequest(reqWith({ host: 'opencouncil.fr' }))).toBe('fr');
     });
 
-    it('falls back to Greek for the Greek domain and for unknown hosts', () => {
+    it('writes Greek for the Greek domain and English for unknown hosts', () => {
         expect(localeForRequest(reqWith({ host: 'opencouncil.gr' }))).toBe('el');
-        expect(localeForRequest(reqWith({ host: 'localhost:3000' }))).toBe('el');
-        expect(localeForRequest(reqWith({}))).toBe('el');
+        expect(localeForRequest(reqWith({ host: 'localhost:3000' }))).toBe('en');
+        expect(localeForRequest(reqWith({}))).toBe('en');
     });
 
     it('prefers x-forwarded-host over host (behind a proxy/LB)', () => {

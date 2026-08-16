@@ -24,7 +24,7 @@ export default {
         },
     } : undefined,
     providers: [Resend({
-        from: 'OpenCouncil <auth@opencouncil.gr>',
+        from: process.env.AUTH_EMAIL_FROM ?? 'Glasshouse <auth@glasshouse.localhost>',
         apiKey: env.RESEND_API_KEY,
         sendVerificationRequest: async (params) => {
             const { identifier: to, provider, url, request } = params

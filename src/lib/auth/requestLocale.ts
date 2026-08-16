@@ -16,10 +16,13 @@ import { hostFromRequest, readCookie } from './requestHeaders';
  * script, which is the one thing the realm alone cannot tell us.
  *
  * Realm-derived by design, which means it returns only a realm's default locale —
- * never `en`. Someone signing in from `opencouncil.gr/en` gets the Greek email.
+ * never a locale the realm doesn't own (e.g. `en` for a sign-in on
+ * `opencouncil.gr/en`, which still gets the Greek email; `en` is only returned
+ * for the `us` realm, whose own default locale is English).
  * The magic link's `callbackUrl` carries the locale-prefixed path they came from
- * if we ever want that signal; until then the `en` rows in the email copy tables
- * are unreachable by this path (`BaseTemplate` can still be handed `en` directly).
+ * if we ever want that signal; until then the non-default-locale rows in the
+ * email copy tables are unreachable by this path (`BaseTemplate` can still be
+ * handed any locale directly).
  */
 export function localeForRequest(request: Request): AppLocale {
     const realm = effectiveRealm(

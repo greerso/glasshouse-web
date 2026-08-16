@@ -54,6 +54,10 @@ export const DEMO_SCENARIO_BY_REALM: Record<Realm, DemoScenario> = {
     cyprus: 'greece',
     france: 'france',
     serbia: 'serbia',
+    // Phase 0 placeholder: no English-language scenario exists yet (unlike
+    // Cyprus, none of the three speaks the right language for US visitors
+    // either). Needs a real Thompson's Station scenario before /about ships.
+    us: 'greece',
 }
 
 /** Center and zoom of the static map tile behind the map mockup, per scenario. */

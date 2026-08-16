@@ -36,11 +36,19 @@ export const REALMS = {
         country: 'RS',
         contactPhone: '0800 301167',
     },
+    us: {
+        domain: process.env.NEXT_PUBLIC_REALM_DOMAIN ?? 'glasshouse.town',
+        defaultLocale: 'en',
+        country: 'US',
+        // Phase 0: no office line yet for the US deployment — placeholder
+        // contact email until real content lands.
+        contactPhone: 'hello@glasshouse.town',
+    },
 } as const satisfies Record<
     Realm,
     {
         domain: string;
-        defaultLocale: 'el' | 'fr' | 'sr';
+        defaultLocale: 'el' | 'fr' | 'sr' | 'en';
         country: Country;
         extraLocales?: readonly string[];
         contactPhone: string;
@@ -74,6 +82,7 @@ const REALM_DEFAULT_MAP_VIEW: Record<Realm, { center: [number, number]; zoom: nu
     france: { center: [2.4, 46.6], zoom: 5 },        // metropolitan France
     cyprus: { center: [33.2, 35.0], zoom: 8 },       // island of Cyprus
     serbia: { center: [20.457, 44.817], zoom: 6 },   // Belgrade
+    us: { center: [-86.9114, 35.8023], zoom: 11 },   // Thompson's Station, TN
 };
 
 const hostMatchesDomain = (host: string, domain: string): boolean =>
@@ -114,11 +123,11 @@ export function createRealmResolver<R extends string>(
 const resolveRealm = createRealmResolver(REALMS);
 
 /**
- * The realm a Host header value belongs to, defaulting to `greece` for unknown
+ * The realm a Host header value belongs to, defaulting to `us` for unknown
  * hosts (localhost, direct-IP requests).
  */
 export function realmForHost(host: string | null | undefined): Realm {
-    return resolveRealm(host) ?? 'greece';
+    return resolveRealm(host) ?? 'us';
 }
 
 /**
@@ -187,7 +196,9 @@ export function effectiveRealm(host: string | null | undefined, overrideCookie: 
  * (their default plus any `extraLocales`, e.g. `sr-Latn` on serbia) that the
  * realm doesn't own itself (e.g. `fr` on opencouncil.gr). The proxy 301s their
  * URL prefixes to the unprefixed URL; `en` is shared by all realms, belongs to
- * none, and is never foreign.
+ * none, and is never foreign — even though `us`'s own default locale is
+ * `en`, `/en` must keep serving 200 on every other realm exactly as it did
+ * before `us` existed (see `foreignLocaleRedirectPath` in seo-redirects.ts).
  *
  * Filtered by locale rather than by realm: realms may share a default locale,
  * and a realm's own locales are never foreign on its host no matter which
@@ -201,7 +212,7 @@ export function computeForeignLocales<R extends string>(
     realms: Record<R, { defaultLocale: string; extraLocales?: readonly string[] }>,
 ): Record<R, string[]> {
     const ownLocales = (realm: { defaultLocale: string; extraLocales?: readonly string[] }) =>
-        [realm.defaultLocale, ...(realm.extraLocales ?? [])];
+        [realm.defaultLocale, ...(realm.extraLocales ?? [])].filter((locale) => locale !== 'en');
     const allLocales = Object.values<{ defaultLocale: string; extraLocales?: readonly string[] }>(realms)
         .flatMap(ownLocales);
     const entries = (Object.keys(realms) as R[]).map((realm) => {

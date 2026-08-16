@@ -69,6 +69,7 @@ enum CityLanguage {
   el
   fr
   sr
+  en
 }
 
 // Tenant/grouping a city belongs to (e.g. the Greek vs. French deployment).
@@ -77,6 +78,7 @@ enum Realm {
   france
   cyprus
   serbia
+  us
 }
 
 /// Where a city stands with us. Collapses the old (status, officialSupport) pair:

@@ -30,10 +30,10 @@ describe('buildCanonicalAlternates', () => {
         });
     });
 
-    it('defaults unknown hosts to the greece realm', async () => {
+    it('defaults unknown hosts to the us realm', async () => {
         currentHost = 'localhost:3000';
         expect(await buildCanonicalAlternates('/athens')).toEqual({
-            canonical: 'https://opencouncil.gr/athens',
+            canonical: 'https://glasshouse.town/athens',
         });
     });
 
