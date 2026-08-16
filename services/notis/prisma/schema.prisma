@@ -13,9 +13,13 @@ datasource db {
   url      = env("NOTIS_DATABASE_URL")
 }
 
+// Two states only. "Phone removed" and "phone notifications unchecked" are
+// unsubscribes, not a separate pause: the profile checkbox IS the
+// subscription (single control). Notis reports ΣΤΟΠ to the main app over an
+// authenticated API call so the checkbox follows; the poller re-activates
+// when the checkbox comes back on (PR 4/5).
 enum SubscriptionStatus {
   active
-  paused_no_phone
   unsubscribed
 }
 
@@ -33,7 +37,8 @@ model NotisSubscription {
 
   status SubscriptionStatus @default(active)
   origin SubscriptionOrigin
-  // Only the user moves a row into or out of `unsubscribed`.
+  // Only a user action moves a row into or out of `unsubscribed`:
+  // ΣΤΟΠ, the agent's unsubscribe tool, or the profile checkbox.
   unsubscribedAt DateTime?
 
   // The agent-maintained free-text profile. Seeded once from notification
