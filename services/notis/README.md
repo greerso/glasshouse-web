@@ -62,8 +62,10 @@ subscription".
 All four variables are optional. Without them, the webhook route rejects
 events in production and outbound sends fail with an alert:
 
-- `BIRD_API_KEY`, `BIRD_WORKSPACE_ID`, `BIRD_WHATSAPP_CHANNEL_ID` — same
-  values as the main app's.
+- `BIRD_API_KEY`, `BIRD_WORKSPACE_ID`, `BIRD_WHATSAPP_CHANNEL_ID`,
+  `BIRD_SMS_CHANNEL_ID` — same values as the main app's. The SMS id exists
+  so SMS conversation events are recognized and ignored; without it an
+  unmatched channel id classifies as WhatsApp.
 - `BIRD_WEBHOOK_SECRET` — the signing key of the NOTIS subscription. Do not
   reuse the main app's secret.
 
@@ -88,7 +90,7 @@ The app spec lives in the DO dashboard, not the repo. The Notis component:
 | Instance | smallest available (stateless, I/O-bound) |
 | Env (secret, run+build) | `ANTHROPIC_API_KEY`, `NOTIS_DATABASE_URL`, `MAIN_DATABASE_URL` |
 | Env (build-time, plain) | `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` (public token; baked at build — without it the wizard's map/address search degrades to text chips) |
-| Env (optional) | `NOTIS_MCP_URL` (defaults to `https://opencouncil.gr/mcp`), `OPENCOUNCIL_BASE_URL`, `MAIN_SESSION_COOKIE_NAME`, `NOTIS_ALERT_WEBHOOK_URL`, `BIRD_API_KEY`, `BIRD_WORKSPACE_ID`, `BIRD_WHATSAPP_CHANNEL_ID`, `BIRD_WEBHOOK_SECRET` (see [Bird](#bird-whatsapp)) |
+| Env (optional) | `NOTIS_MCP_URL` (defaults to `https://opencouncil.gr/mcp`), `OPENCOUNCIL_BASE_URL`, `MAIN_SESSION_COOKIE_NAME`, `NOTIS_ALERT_WEBHOOK_URL`, `BIRD_API_KEY`, `BIRD_WORKSPACE_ID`, `BIRD_WHATSAPP_CHANNEL_ID`, `BIRD_SMS_CHANNEL_ID`, `BIRD_WEBHOOK_SECRET` (see [Bird](#bird-whatsapp)) |
 
 Same branch wiring as the main component: `production` branch → production,
 `main` → staging. The staging component gets its own domain
