@@ -1,4 +1,4 @@
-import { env } from "@/env.mjs";
+import { alert as sendAlert } from "./alert";
 import { hasNotisDb, notisDb } from "./db";
 import { hasMainDb, mainDb } from "./main-db";
 
@@ -32,15 +32,7 @@ export function blastRadiusExceeded(subscriptions: number, missing: number): boo
   return missing > Math.max(1, Math.floor(subscriptions * 0.01));
 }
 
-async function alert(message: string): Promise<void> {
-  console.error(`[notis:janitor] ${message}`);
-  if (!env.NOTIS_ALERT_WEBHOOK_URL) return;
-  await fetch(env.NOTIS_ALERT_WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: `🧹 notis janitor: ${message}` }),
-  }).catch((e) => console.error("[notis:janitor] alert webhook failed:", e));
-}
+const alert = (message: string) => sendAlert("janitor", message, "🧹");
 
 export async function runJanitor(): Promise<JanitorResult> {
   if (!hasNotisDb() || !hasMainDb()) {
