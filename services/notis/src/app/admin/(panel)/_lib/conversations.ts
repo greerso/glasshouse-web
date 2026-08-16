@@ -71,27 +71,38 @@ function toSummary(
   };
 }
 
-// The list stops scaling with total history at this bound; older
-// conversations stay reachable through their users' direct links.
-const CONVERSATION_LIST_LIMIT = 500;
+export const CONVERSATIONS_PAGE_SIZE = 50;
 
-export async function listConversations(search?: string): Promise<ConversationSummary[]> {
-  if (!hasNotisDb()) return [];
+export interface ConversationList {
+  conversations: ConversationSummary[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
+export async function listConversations(search?: string, page = 1): Promise<ConversationList> {
+  if (!hasNotisDb()) return { conversations: [], total: 0, page: 1, pages: 1 };
   const db = notisDb();
   const q = search?.trim();
+  const where = q
+    ? {
+        OR: [
+          { userName: { contains: q, mode: "insensitive" as const } },
+          { phone: { contains: q } },
+        ],
+      }
+    : undefined;
+
+  const total = await db.notisSubscription.count({ where });
+  const pages = Math.max(1, Math.ceil(total / CONVERSATIONS_PAGE_SIZE));
+  const current = Math.min(page, pages);
   const subs = await db.notisSubscription.findMany({
-    where: q
-      ? {
-          OR: [
-            { userName: { contains: q, mode: "insensitive" } },
-            { phone: { contains: q } },
-          ],
-        }
-      : undefined,
+    where,
     orderBy: { updatedAt: "desc" },
-    take: CONVERSATION_LIST_LIMIT,
+    skip: (current - 1) * CONVERSATIONS_PAGE_SIZE,
+    take: CONVERSATIONS_PAGE_SIZE,
   });
-  if (subs.length === 0) return [];
+  if (subs.length === 0) return { conversations: [], total, page: current, pages };
   const ids = subs.map((s) => s.id);
 
   const [counts, failures, wakes, costs, lastMessages] = await Promise.all([
@@ -137,16 +148,21 @@ export async function listConversations(search?: string): Promise<ConversationSu
     ]),
   );
 
-  return subs.map((sub) =>
-    toSummary(sub, {
-      messagesSent: countMap.get(`${sub.id}:outbound`) ?? 0,
-      messagesReceived: countMap.get(`${sub.id}:inbound`) ?? 0,
-      messagesFailed: failureMap.get(sub.id) ?? 0,
-      wakes: wakeMap.get(sub.id) ?? 0,
-      costUsd: costMap.get(sub.id) ?? 0,
-      lastMessage: lastMap.get(sub.id),
-    }),
-  );
+  return {
+    conversations: subs.map((sub) =>
+      toSummary(sub, {
+        messagesSent: countMap.get(`${sub.id}:outbound`) ?? 0,
+        messagesReceived: countMap.get(`${sub.id}:inbound`) ?? 0,
+        messagesFailed: failureMap.get(sub.id) ?? 0,
+        wakes: wakeMap.get(sub.id) ?? 0,
+        costUsd: costMap.get(sub.id) ?? 0,
+        lastMessage: lastMap.get(sub.id),
+      }),
+    ),
+    total,
+    page: current,
+    pages,
+  };
 }
 
 export async function getConversation(id: string): Promise<ConversationDetail | null> {
