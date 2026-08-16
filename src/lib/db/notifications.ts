@@ -5,6 +5,7 @@ import { auth, signIn } from "@/auth";
 import { attachGeometryToCities } from "./cities";
 import prisma from "@/lib/db/prisma";
 import { Result, createSuccess, createError } from "@/lib/result";
+import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { NotFoundError } from "@/lib/api/errors";
 import { sendPetitionReceivedAdminAlert, sendUserOnboardedAdminAlert, sendNotificationSignupAdminAlert } from "@/lib/discord";
 import { matchUsersToSubjects } from "@/lib/notifications/matching";
@@ -306,6 +307,14 @@ export async function saveNotificationPreferences(data: OnboardingData & {
                 // Email exists but user is not authenticated - return error
                 return createError("email_exists");
             } else {
+                // Registration is closed: this public, unauthenticated flow
+                // creates a User row directly, bypassing the signIn allowlist
+                // gate in auth.ts. Same check, same helper, so this path can't
+                // be used to register an account the login flow would reject.
+                if (!seedUser && !isEmailAllowed(email, process.env.AUTH_ALLOWED_EMAILS)) {
+                    return createError("registration_closed");
+                }
+
                 // Create new user
                 const newUser = await prisma.user.create({
                     data: {
@@ -520,6 +529,14 @@ export async function savePetition(data: OnboardingData & {
                 // Email exists but user is not authenticated - return error
                 return createError("email_exists");
             } else {
+                // Registration is closed: this public, unauthenticated flow
+                // creates a User row directly, bypassing the signIn allowlist
+                // gate in auth.ts. Same check, same helper, so this path can't
+                // be used to register an account the login flow would reject.
+                if (!seedUser && !isEmailAllowed(email, process.env.AUTH_ALLOWED_EMAILS)) {
+                    return createError("registration_closed");
+                }
+
                 // Create new user
                 const newUser = await prisma.user.create({
                     data: {
