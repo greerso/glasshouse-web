@@ -41,6 +41,7 @@
         "municipalityMap": "Мапа општине",
         "webglNotSupported": "Интерактивна мапа није доступна",
         "webglFallbackMessage": "Ваш прегледач не подржава WebGL, који је неопходан за интерактивну мапу. Уместо ње приказана вам је статична мапа.",
+        "mapTokenMissingMessage": "Токен за мапу није подешен, па се интерактивна мапа не може учитати.",
         "transcript": "Транскрипт",
         "meetingNavigation": "Навигација кроз седницу",
         "searchAddressInMunicipality": "Претражите адресу у {cityName}",

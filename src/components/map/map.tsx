@@ -1045,16 +1045,22 @@ const Map = memo(function Map({
 })
 
 /**
- * Wrapper component that checks for WebGL support before rendering the interactive map.
- * Falls back to a static map image with an explanatory message when WebGL is unavailable.
- * Also wraps with an error boundary to catch any runtime Mapbox GL failures.
+ * Wrapper that refuses to mount Mapbox when the access token is missing (the
+ * static fallback then says so, instead of blaming WebGL) and otherwise checks
+ * WebGL before rendering the interactive map.
  */
 function MapWithFallback(props: MapProps) {
     const [webglSupported, setWebglSupported] = useState<boolean | null>(null)
+    const hasToken = Boolean(env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN)
 
     useEffect(() => {
+        if (!hasToken) return
         setWebglSupported(isWebGLSupported())
-    }, [])
+    }, [hasToken])
+
+    if (!hasToken) {
+        return <MapFallback className={props.className} center={props.center} features={props.features} />
+    }
 
     if (webglSupported === null) {
         return <div className={props.className} />

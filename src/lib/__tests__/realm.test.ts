@@ -12,6 +12,7 @@ import {
     getRealmCountry,
     getRealmGeocoding,
     getRealmContactPhone,
+    getRealmDefaultMapView,
     telHref,
     ALL_REALMS,
 } from '../realm';
@@ -200,6 +201,18 @@ describe('getRealmGeocoding', () => {
     it('pairs each realm with its own country and default locale', () => {
         expect(getRealmGeocoding('france')).toEqual({ country: 'FR', language: 'fr' });
         expect(getRealmGeocoding('serbia')).toEqual({ country: 'RS', language: 'sr' });
+    });
+});
+
+describe('getRealmDefaultMapView', () => {
+    it('centers the US realm on Thompson\'s Station, not Athens', () => {
+        expect(getRealmDefaultMapView('us')).toEqual({
+            center: [-86.9114, 35.8023],
+            zoom: 11,
+        });
+        expect(getRealmDefaultMapView('us').center).not.toEqual(
+            getRealmDefaultMapView('greece').center,
+        );
     });
 });
 

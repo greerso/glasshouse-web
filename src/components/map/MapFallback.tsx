@@ -5,12 +5,10 @@ import { cn } from '@/lib/utils'
 import { env } from '@/env.mjs'
 import { AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { MAP_FALLBACK_DEFAULT_CENTER, mapFallbackMessageKey } from './mapFallback'
 // The interactive map's custom style doesn't render in the Static Images API,
 // so we use a standard Mapbox style for the fallback.
 const STATIC_MAP_STYLE = 'mapbox/light-v11'
-
-// Default center: Athens, Greece
-const DEFAULT_CENTER: [number, number] = [23.7275, 37.9838]
 
 // Max URL length for Mapbox Static Images API
 const MAX_URL_LENGTH = 8192
@@ -133,25 +131,26 @@ interface MapFallbackProps {
 
 export default function MapFallback({ className, center, features }: MapFallbackProps) {
     const t = useTranslations('Common')
-    const mapCenter = center ?? DEFAULT_CENTER
+    const mapCenter = center ?? MAP_FALLBACK_DEFAULT_CENTER
+    const hasToken = Boolean(env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN)
 
     return (
         <div className={cn("relative w-full h-full overflow-hidden bg-muted", className)}>
-            {/* Static map with GeoJSON overlay when available */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-                src={getStaticMapUrl(mapCenter, 800, 600, features)}
-                alt={t('municipalityMap')}
-                className="absolute inset-0 w-full h-full object-cover"
-                loading="lazy"
-            />
+            {hasToken && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                    src={getStaticMapUrl(mapCenter, 800, 600, features)}
+                    alt={t('municipalityMap')}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                />
+            )}
 
-            {/* WebGL notice — top-right corner to not obscure map content */}
             <div className="absolute top-3 right-3 z-10 max-w-xs">
                 <Alert variant="warning" className="shadow-sm backdrop-blur-sm bg-yellow-50/90 dark:bg-yellow-950/80 py-3">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription className="text-xs">
-                        {t('webglFallbackMessage')}
+                        {t(mapFallbackMessageKey(hasToken))}
                     </AlertDescription>
                 </Alert>
             </div>

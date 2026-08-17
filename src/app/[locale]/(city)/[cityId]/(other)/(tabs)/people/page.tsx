@@ -7,6 +7,7 @@ import { buildCanonicalAlternates } from '@/lib/utils/hreflang';
 import { getLocalizedName } from "@/lib/formatters/name";
 import { getOgLocale } from '@/i18n/config';
 import { getTranslations } from 'next-intl/server';
+import { siteBranding } from '@/lib/siteBranding';
 
 export async function generateMetadata(props: { params: Promise<{ cityId: string; locale: string }> }): Promise<Metadata> {
     const params = await props.params;
@@ -30,20 +31,21 @@ export async function generateMetadata(props: { params: Promise<{ cityId: string
     // Generate rich description
     const cityName = getLocalizedName(city, params.locale);
     const description = t('description', { cityName, peopleCount, partiesCount });
+    const { title: siteName } = siteBranding(city.realm);
 
     // Generate OG image URL
     const ogImageUrl = `/api/og?cityId=${params.cityId}&pageType=people`;
 
     return {
-        title: t('title', { cityName }),
+        title: `${t('shortTitle', { cityName })} | ${siteName}`,
         description,
-        keywords: [...(t.raw('keywords') as string[]), cityName, 'OpenCouncil'],
+        keywords: [...(t.raw('keywords') as string[]), cityName, siteName],
         authors: [{ name: t('author', { cityName }) }],
         openGraph: {
             title: t('shortTitle', { cityName }),
             description,
             type: 'website',
-            siteName: 'OpenCouncil',
+            siteName,
             images: [
                 {
                     url: ogImageUrl,

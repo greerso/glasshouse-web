@@ -1,8 +1,10 @@
 import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { LandingV2 } from '@/components/landing/v2/LandingV2';
 import { buildCanonicalAlternates } from '@/lib/utils/hreflang';
 import { getRealm } from '@/lib/realm.server';
 import { getRealmDefaultMapView } from '@/lib/realm';
+import { homeRedirectPath } from '@/lib/usHome';
 import { getMapSubjectsCached, getGeneralSubjectsCached, getSubjectCountsByCityCached } from '@/lib/db/subject';
 import { getListedCitiesCached, getMapCitiesCached, getPetitionedMapCitiesCached } from '@/lib/db/cities';
 import { getUpcomingMeetingsCached } from '@/lib/db/meetings';
@@ -16,6 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
     const realm = await getRealm();
+    const usHome = homeRedirectPath(realm);
+    if (usHome) {
+        redirect(usHome);
+    }
     const initialFilters = rangeToSubjectFilters(DEFAULT_RANGE);
 
     const [subjects, generalRows, cities, upcoming, subjectCountByCity, mapCities, petitioned] = await Promise.all([

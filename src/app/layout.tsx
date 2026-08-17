@@ -11,25 +11,30 @@ import { routing, LOCALE_OVERRIDE_HEADER } from "@/i18n/routing";
 import { getLocale, getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import { Metadata } from "next";
-import { getRealmBaseUrlFromRequest } from "@/lib/realm.server";
+import { getRealm, getRealmBaseUrlFromRequest } from "@/lib/realm.server";
+import { siteBranding } from "@/lib/siteBranding";
 
 export async function generateMetadata(): Promise<Metadata> {
     // metadataBase is the realm's canonical domain (resolved from the request
     // Host), so opencouncil.gr and opencouncil.fr each resolve their own
     // relative OG-image / canonical URLs. Child pages set relative `/api/og`
     // image URLs that get resolved against this base per host.
-    const baseUrl = await getRealmBaseUrlFromRequest();
+    const [baseUrl, realm] = await Promise.all([
+        getRealmBaseUrlFromRequest(),
+        getRealm(),
+    ]);
+    const { title, description } = siteBranding(realm);
 
     return {
-        title: 'OpenCouncil',
-        description: 'Ανοιχτή τοπική αυτοδιοίκηση',
+        title,
+        description,
         icons: {
             icon: '/favicon.ico',
         },
         metadataBase: new URL(baseUrl),
         openGraph: {
-            title: 'OpenCouncil',
-            description: 'Ανοιχτή τοπική αυτοδιοίκηση',
+            title,
+            description,
             type: 'website',
             url: baseUrl,
             images: [
@@ -37,14 +42,14 @@ export async function generateMetadata(): Promise<Metadata> {
                     url: '/oc-theme.png',
                     width: 500,
                     height: 500,
-                    alt: 'OpenCouncil Logo',
+                    alt: `${title} Logo`,
                 },
             ],
         },
         twitter: {
             card: 'summary_large_image',
-            title: 'OpenCouncil',
-            description: 'Ανοιχτή τοπική αυτοδιοίκηση',
+            title,
+            description,
             images: ['/oc-theme.png'],
         },
     };

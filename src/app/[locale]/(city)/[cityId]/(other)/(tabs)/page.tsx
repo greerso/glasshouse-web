@@ -7,6 +7,7 @@ import { buildCanonicalAlternates } from "@/lib/utils/hreflang";
 import { getLocalizedName } from "@/lib/formatters/name";
 import { getOgLocale } from '@/i18n/config';
 import { getTranslations } from 'next-intl/server';
+import { siteBranding } from '@/lib/siteBranding';
 
 export async function generateMetadata(
     props: {
@@ -34,17 +35,18 @@ export async function generateMetadata(
     const cityName = getLocalizedName(city, locale);
     const description = t('description', { cityName });
     const ogImageUrl = `/api/og?cityId=${cityId}`;
+    const { title: siteName } = siteBranding(city.realm);
 
     return {
-        title: `${cityName} | OpenCouncil`,
+        title: `${cityName} | ${siteName}`,
         description,
-        keywords: [cityName, ...(t.raw('keywords') as string[]), "OpenCouncil"],
+        keywords: [cityName, ...(t.raw('keywords') as string[]), siteName],
         authors: [{ name: t('author', { cityName }) }],
         openGraph: {
-            title: `${cityName} | OpenCouncil`,
+            title: `${cityName} | ${siteName}`,
             description,
             type: "website",
-            siteName: "OpenCouncil",
+            siteName,
             images: [
                 {
                     url: ogImageUrl,
