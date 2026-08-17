@@ -26,10 +26,16 @@ FROM base
 
 # Accept build argument to toggle database commands
 ARG USE_LOCAL_DB=true
+# Inlined into the client bundle at `next build` (entrypoint) for the AGPL
+# source link in Footer. Also copied to SOURCE_COMMIT so generateBuildId
+# puts the SHA in `/_next/static/<sha>/` on every page, including `/`.
+ARG NEXT_PUBLIC_BUILD_COMMIT_SHA
 
 # Set environment variables
 ENV USE_LOCAL_DB=${USE_LOCAL_DB}
 ENV APP_ENV=production
+ENV NEXT_PUBLIC_BUILD_COMMIT_SHA=${NEXT_PUBLIC_BUILD_COMMIT_SHA}
+ENV SOURCE_COMMIT=${NEXT_PUBLIC_BUILD_COMMIT_SHA}
 
 # Copy the rest of the application code
 COPY . .
