@@ -13,7 +13,9 @@ import { isWebGLSupported } from '@/lib/webgl'
 import MapFallback from './MapFallback'
 import MapErrorBoundary from './MapErrorBoundary'
 
-mapboxgl.accessToken = env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+if (env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN) {
+    mapboxgl.accessToken = env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+}
 
 export interface MapFeature {
     id: string

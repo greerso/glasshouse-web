@@ -1,5 +1,5 @@
 "use server";
-import { Resend } from 'resend';
+import { SESv2Client as SESClient, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { env } from '@/env.mjs';
 
 interface Attachment {
@@ -41,31 +41,29 @@ export interface BatchEmailResult {
     error?: string;
 }
 
-/** Resend's per-call batch cap. Anything bigger must be chunked by the caller. */
-const RESEND_BATCH_LIMIT = 100;
+function asAddressList(value?: string | string[]): string[] | undefined {
+    if (value === undefined) return undefined;
+    return Array.isArray(value) ? value : [value];
+}
 
-/**
- * Apply the dev-email override to a single batch item — same rewrite as
- * `sendEmail` does for one-shot sends.
- */
-function applyDevOverride(item: BatchEmailItem, override: string): BatchEmailItem {
-    const banner = `<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-family:monospace;font-size:13px;color:#92400e;">
-        <strong>🔧 Dev Email Override</strong><br/>
-        <strong>To:</strong> ${item.to}
-    </div>`;
-    return {
-        from: item.from,
-        to: override,
-        replyTo: item.replyTo,
-        subject: `[DEV → ${item.to}] ${item.subject}`,
-        html: banner + item.html,
-        text: item.text,
-        tags: item.tags,
-    };
+function toRawContent(content: Buffer | string): Uint8Array {
+    if (typeof content === 'string') {
+        return new TextEncoder().encode(content);
+    }
+    return new Uint8Array(content);
+}
+
+function getSesClient() {
+    return new SESClient({
+        region: env.AWS_REGION,
+        credentials: {
+            accessKeyId: env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+        },
+    });
 }
 
 export async function sendEmail(params: EmailParams) {
-    const resend = new Resend(env.RESEND_API_KEY);
     let { from, to, cc, replyTo, subject, html, text, attachments, tags } = params;
 
     // Development/preview email override: redirect all emails to a single address
@@ -76,7 +74,7 @@ export async function sendEmail(params: EmailParams) {
     if ((isDev || isPreview) && devEmailOverride) {
         const originalTo = to;
         const originalCc = cc;
-        
+
         // Redirect email to dev address
         to = devEmailOverride;
         cc = undefined; // Clear CC to avoid sending to real addresses
@@ -101,25 +99,39 @@ export async function sendEmail(params: EmailParams) {
     }
 
     try {
-        const result = await resend.emails.send({
-            from,
-            to,
-            cc,
-            replyTo,
-            subject,
-            html,
-            text,
-            attachments,
-            tags,
-        });
+        const result = await getSesClient().send(new SendEmailCommand({
+            FromEmailAddress: from,
+            Destination: {
+                ToAddresses: [to],
+                CcAddresses: asAddressList(cc),
+            },
+            ReplyToAddresses: asAddressList(replyTo),
+            Content: {
+                Simple: {
+                    Subject: { Data: subject, Charset: 'UTF-8' },
+                    Body: {
+                        Html: { Data: html, Charset: 'UTF-8' },
+                        ...(text !== undefined ? { Text: { Data: text, Charset: 'UTF-8' } } : {}),
+                    },
+                    ...(attachments && attachments.length > 0
+                        ? {
+                            Attachments: attachments.map((attachment) => ({
+                                FileName: attachment.filename,
+                                RawContent: toRawContent(attachment.content),
+                                ContentType: attachment.contentType,
+                                ContentDisposition: 'ATTACHMENT' as const,
+                            })),
+                        }
+                        : {}),
+                },
+            },
+            ...(tags && tags.length > 0
+                ? { EmailTags: tags.map((tag) => ({ Name: tag.name, Value: tag.value })) }
+                : {}),
+        }));
 
-        if (result.error) {
-            console.error('Failed to send email:', result);
-            throw new Error("An error occurred while sending the email");
-        }
-
-        console.log('Email sent successfully:', result);
-        return { success: true, message: 'Email sent successfully' };
+        console.log('Email sent successfully:', result.MessageId);
+        return { success: true, message: 'Email sent successfully', messageId: result.MessageId };
     } catch (error) {
         console.error('Failed to send email:', error);
         return { success: false, message: 'Failed to send email' };
@@ -127,95 +139,35 @@ export async function sendEmail(params: EmailParams) {
 }
 
 /**
- * Send up to 100 emails in a single Resend batch call. Returns a summary so
- * the caller can aggregate across multiple chunks. The `idempotencyKey`
- * dedupes retries for 24h on Resend's side — pass a deterministic key derived
- * from the batch's content + recipients, not a fresh UUID.
- *
- * Caller is responsible for chunking — a request bigger than 100 items is
- * rejected up-front rather than silently truncated.
+ * Send each item with a sequential SES SendEmail call. The `idempotencyKey`
+ * is accepted so existing callers stay unchanged; SES has no Resend-style
+ * 24h batch idempotency header.
  */
 export async function sendEmailBatch(
     items: BatchEmailItem[],
-    opts: { idempotencyKey: string },
+    _opts: { idempotencyKey: string },
 ): Promise<BatchEmailResult> {
     if (items.length === 0) return { success: true, failedTos: [] };
-    if (items.length > RESEND_BATCH_LIMIT) {
-        return {
-            success: false,
-            failedTos: items.map((i) => i.to),
-            error: `Batch size ${items.length} exceeds Resend limit of ${RESEND_BATCH_LIMIT}`,
-        };
-    }
 
-    const isDev = process.env.NODE_ENV !== 'production';
-    const isPreview = env.DEPLOYMENT_ENV === 'preview';
-    const devEmailOverride = env.DEV_EMAIL_OVERRIDE;
-    const useOverride = (isDev || isPreview) && !!devEmailOverride;
-
-    const rewritten = useOverride
-        ? items.map((i) => applyDevOverride(i, devEmailOverride!))
-        : items;
-
-    // Resend's HTTP API uses snake_case (`reply_to`); the SDK exposes camelCase
-    // (`replyTo`). We use the SDK for one-shot sends and direct fetch here, so
-    // translate just before serializing.
-    const payload = rewritten.map(({ replyTo, ...rest }) => ({
-        ...rest,
-        ...(replyTo !== undefined ? { reply_to: replyTo } : {}),
-    }));
-
-    if (useOverride) {
-        console.log(`📧 Dev mode: redirecting batch of ${items.length} to "${devEmailOverride}"`);
-    }
-
-    // Hit the batch endpoint directly: the pinned SDK (4.0.0) doesn't expose
-    // an idempotency-key option, but Resend's HTTP API supports it via the
-    // Idempotency-Key header.
-    try {
-        const response = await fetch('https://api.resend.com/emails/batch', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-                'Content-Type': 'application/json',
-                'Idempotency-Key': opts.idempotencyKey,
-                // Permissive mode: send the valid items in the batch and report
-                // invalid ones individually via a top-level `errors[]`.
-                'x-batch-validation': 'permissive',
-            },
-            body: JSON.stringify(payload),
+    const failedTos: string[] = [];
+    for (const item of items) {
+        const result = await sendEmail({
+            from: item.from,
+            to: item.to,
+            replyTo: item.replyTo,
+            subject: item.subject,
+            html: item.html,
+            text: item.text,
+            tags: item.tags,
         });
-
-        if (!response.ok) {
-            const errText = await response.text();
-            console.error(`Resend batch send failed (${response.status}):`, errText);
-            return {
-                success: false,
-                failedTos: items.map((i) => i.to),
-                error: `Resend batch returned ${response.status}`,
-            };
+        if (!result.success) {
+            failedTos.push(item.to);
         }
-
-        // Permissive mode response shape:
-        //   { data: [{ id }, ...], errors: [{ index, message }, ...] }
-        // `data` lists only successes; `errors[].index` points back at the
-        // original input position, which is how we recover the failed `to`.
-        const body = await response.json().catch(() => ({}));
-        const errors: Array<{ index: number; message?: string }> =
-            Array.isArray(body?.errors) ? body.errors : [];
-        const failedTos = errors
-            .map((e) => (typeof e.index === 'number' ? items[e.index]?.to : undefined))
-            .filter((to): to is string => to !== undefined);
-        if (failedTos.length > 0) {
-            console.error(`Resend batch reported per-item errors:`, errors);
-        }
-        return { success: failedTos.length === 0, failedTos };
-    } catch (error) {
-        console.error('Resend batch send threw:', error);
-        return {
-            success: false,
-            failedTos: items.map((i) => i.to),
-            error: error instanceof Error ? error.message : 'Unknown error',
-        };
     }
+
+    return {
+        success: failedTos.length === 0,
+        failedTos,
+        error: failedTos.length > 0 ? `Failed to send ${failedTos.length} of ${items.length} emails` : undefined,
+    };
 }

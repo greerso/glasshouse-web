@@ -1,9 +1,9 @@
-import { aiChat, ResultWithUsage } from '../ai';
-import Anthropic from '@anthropic-ai/sdk';
+import { aiChat } from '../ai';
+
+const mockCreate = jest.fn();
 
 // Mock the Anthropic SDK
 jest.mock('@anthropic-ai/sdk', () => {
-  const mockCreate = jest.fn();
   return {
     __esModule: true,
     default: jest.fn().mockImplementation(() => ({
@@ -21,13 +21,10 @@ jest.mock('dotenv', () => ({
 
 // Mock env.mjs (ESM module that jest can't import directly)
 jest.mock('@/env.mjs', () => ({
-  env: {}
+  env: { ANTHROPIC_API_KEY: 'test-key' }
 }));
 
 describe('aiChat', () => {
-  // Use this for direct access to the mocked create function
-  const mockCreate = ((Anthropic as unknown as jest.Mock).mock.results[0]?.value.messages.create || jest.fn()) as jest.Mock;
-  
   beforeEach(() => {
     jest.clearAllMocks();
 

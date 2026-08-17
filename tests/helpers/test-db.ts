@@ -17,6 +17,9 @@ if (!globalState.__ocTestDb) {
 function ensureTestEnvVars() {
     const defaults: Record<string, string> = {
         RESEND_API_KEY: 'test-resend-key',
+        AWS_REGION: 'us-east-1',
+        AWS_ACCESS_KEY_ID: 'test-aws-access-key',
+        AWS_SECRET_ACCESS_KEY: 'test-aws-secret-key',
         NEXTAUTH_SECRET: 'test-nextauth-secret',
         GOOGLE_API_KEY: 'test-google-key',
         DO_SPACES_ENDPOINT: 'https://example.com',

@@ -7,7 +7,13 @@ import { IS_DEV } from './utils';
 
 dotenv.config();
 
-const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+function getAnthropic(): Anthropic {
+    if (!env.ANTHROPIC_API_KEY) {
+        throw new Error('ANTHROPIC_API_KEY is not configured');
+    }
+    return new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+}
+
 export type ResultWithUsage<T> = { result: T, usage: Anthropic.Messages.Usage };
 
 // Configuration types
@@ -240,7 +246,7 @@ export async function aiChat<T>(
                 ];
             }
 
-            response = await anthropic.messages.create(requestConfig);
+            response = await getAnthropic().messages.create(requestConfig);
         } catch (e) {
             console.error(`Error in aiChat: ${e}`);
             throw e;

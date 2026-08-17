@@ -16,15 +16,20 @@ export const env = createEnv({
     DATABASE_NAME: z.string().optional(),
 
     // Auth
-    RESEND_API_KEY: z.string().min(1),
+    RESEND_API_KEY: z.string().min(1).optional(),
     NEXTAUTH_SECRET: z.string().min(1),
     NEXTAUTH_URL: z.string().url(),
     BASIC_AUTH_USERNAME: z.string().optional(),
     BASIC_AUTH_PASSWORD: z.string().optional(),
 
+    // AWS SES (magic-link + sendEmail)
+    AWS_REGION: z.string().min(1).default("us-east-1"),
+    AWS_ACCESS_KEY_ID: z.string().min(1),
+    AWS_SECRET_ACCESS_KEY: z.string().min(1),
+
     // Services
-    ANTHROPIC_API_KEY: z.string().min(1),
-    GOOGLE_API_KEY: z.string().min(1),
+    ANTHROPIC_API_KEY: z.string().min(1).optional(),
+    GOOGLE_API_KEY: z.string().min(1).optional(),
     // YouTube Data API v3 key (used by the poll-livestreams cron to find meeting
     // livestreams). Optional — when unset, the cron no-ops.
     YOUTUBE_API_KEY: z.string().optional(),
@@ -91,7 +96,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().min(1),
+    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().min(1).optional(),
     NEXT_PUBLIC_CONTACT_EMAIL: z.string().email().optional(),
     NEXT_PUBLIC_CONTACT_ADDRESS: z.string().optional(),
     NEXT_PUBLIC_BUILD_COMMIT_SHA: z.string().optional(),
@@ -112,6 +117,9 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    AWS_REGION: process.env.AWS_REGION,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
@@ -174,4 +182,10 @@ export const env = createEnv({
    * Set SKIP_ENV_VALIDATION=1 to skip.
    */
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+
+  /**
+   * Blank values in .env files become unset, so optional keys can stay
+   * listed as empty without failing validation.
+   */
+  emptyStringAsUndefined: true,
 }); 
