@@ -113,6 +113,18 @@ export async function editCouncilMeeting(cityId: string, id: string, meetingData
     }
 }
 
+export async function editCouncilMeetingDirect(
+    cityId: string,
+    id: string,
+    meetingData: Partial<Omit<CouncilMeeting, 'id' | 'cityId' | 'createdAt' | 'updatedAt'>>,
+): Promise<CouncilMeetingWithAdminBody> {
+    return prisma.councilMeeting.update({
+        where: { cityId_id: { cityId, id } },
+        data: meetingData,
+        include: meetingWithAdminBodyInclude,
+    });
+}
+
 export async function getCouncilMeeting(cityId: string, id: string): Promise<CouncilMeetingWithAdminBody | null> {
     const startTime = performance.now();
     try {
@@ -231,26 +243,27 @@ export async function getUpcomingMeetingsCached(realm: Realm, { limit = 10 }: { 
 
 export async function toggleMeetingRelease(cityId: string, id: string, released: boolean): Promise<CouncilMeetingWithAdminBody> {
     await withUserAuthorizedToEdit({ councilMeetingId: id, cityId: cityId });
-    try {
-        const updatedMeeting = await prisma.councilMeeting.update({
-            where: { cityId_id: { cityId, id } },
-            data: { released },
-            include: meetingWithAdminBodyInclude,
-        });
-        // TODO: utilize api/cities/[cityId]/meetings/[meetingId] to edit the meeting
-        revalidateTag(`city:${cityId}:meetings`, 'max');
-        revalidatePath(`/${cityId}`, "layout");
-        const city = await prisma.city.findUnique({ where: { id: cityId }, select: { realm: true } });
-        if (city) {
-            revalidateTag(landingSubjectsTag(city.realm), 'max');
-            // a newly (un)released meeting can enter/leave the landing's upcoming list
-            revalidateTag(upcomingMeetingsTag(city.realm), 'max');
-        }
-        return updatedMeeting;
-    } catch (error) {
-        console.error('Error toggling council meeting release:', error);
-        throw new Error('Failed to toggle council meeting release');
+    return toggleMeetingReleaseDirect(cityId, id, released);
+}
+
+export async function toggleMeetingReleaseDirect(
+    cityId: string,
+    id: string,
+    released: boolean,
+): Promise<CouncilMeetingWithAdminBody> {
+    const updatedMeeting = await prisma.councilMeeting.update({
+        where: { cityId_id: { cityId, id } },
+        data: { released },
+        include: meetingWithAdminBodyInclude,
+    });
+    revalidateTag(`city:${cityId}:meetings`, 'max');
+    revalidatePath(`/${cityId}`, 'layout');
+    const city = await prisma.city.findUnique({ where: { id: cityId }, select: { realm: true } });
+    if (city) {
+        revalidateTag(landingSubjectsTag(city.realm), 'max');
+        revalidateTag(upcomingMeetingsTag(city.realm), 'max');
     }
+    return updatedMeeting;
 }
 
 export async function getMeetingDataForOG(cityId: string, meetingId: string) {

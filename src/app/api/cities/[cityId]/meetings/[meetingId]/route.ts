@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { getMeetingDataCore } from '@/lib/getMeetingData';
-import { editCouncilMeeting } from '@/lib/db/meetings';
+import { editCouncilMeetingDirect } from '@/lib/db/meetings';
 import { z } from 'zod';
-import { withUserAuthorizedToEdit } from '@/lib/auth';
+import { withServiceOrUserAuth } from '@/lib/auth';
 import { meetingSchema } from '@/lib/zod-schemas/meeting';
 
 export async function GET(
@@ -35,16 +35,16 @@ export async function GET(
 }
 
 export async function PUT(
-    request: Request,
+    request: NextRequest,
     props: { params: Promise<{ cityId: string; meetingId: string }> }
 ) {
     const params = await props.params;
     try {
-        await withUserAuthorizedToEdit({ cityId: params.cityId });
+        await withServiceOrUserAuth(request, { cityId: params.cityId });
         const body = await request.json();
         const { name, name_en, date, youtubeUrl, agendaUrl, meetingId, administrativeBodyId } = meetingSchema.parse(body);
 
-        const meeting = await editCouncilMeeting(params.cityId, params.meetingId, {
+        const meeting = await editCouncilMeetingDirect(params.cityId, params.meetingId, {
             name,
             name_en,
             dateTime: date,

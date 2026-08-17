@@ -6,7 +6,7 @@ import { withServiceOrUserAuth } from '@/lib/auth';
 import { sendMeetingCreatedAdminAlert } from '@/lib/discord';
 import { createMeetingCalendarEvent, calculateMeetingEndTime } from '@/lib/google-calendar';
 import { requestProcessAgendaInternal } from '@/lib/tasks/processAgendaInternal';
-import { handleApiError } from '@/lib/api/errors';
+import { ConflictError, handleApiError } from '@/lib/api/errors';
 import { env } from '@/env.mjs';
 import prisma from '@/lib/db/prisma';
 import { Prisma } from '@prisma/client';
@@ -38,6 +38,8 @@ export async function POST(request: NextRequest, props: { params: Promise<{ city
         const authResult = await withServiceOrUserAuth(request, { cityId: params.cityId });
         const body = await request.json();
         const { name, name_en, date, youtubeUrl, agendaUrl, meetingId: providedMeetingId, administrativeBodyId, processAgenda } = meetingSchema.parse(body);
+        const ingestExtras = z.object({ released: z.boolean().optional() }).parse(body);
+        const released = authResult.type === 'service' && ingestExtras.released === true;
         const cityId = params.cityId;
 
         // Auto-generate meetingId if not provided
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ city
             cityId,
             youtubeUrl: youtubeUrl || null,
             agendaUrl: agendaUrl || null,
-            released: false as const,
+            released,
             muxPlaybackId: null,
             administrativeBodyId: administrativeBodyId || null,
         });
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ city
         } catch (error) {
             // Retry with a fresh ID on unique constraint violation (TOCTOU race).
             if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002')) throw error;
-            if (providedMeetingId) throw error;
+            if (providedMeetingId) throw new ConflictError('Meeting already exists');
             meetingId = await generateUniqueMeetingId(cityId, date);
             meeting = await createCouncilMeetingDirect(buildMeetingData(meetingId));
         }

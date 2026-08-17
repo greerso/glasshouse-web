@@ -55,6 +55,8 @@ model City {
   consultations Consultation[]
   consultationComments ConsultationComment[]
 
+  agendaObservations AgendaObservation[]
+
   @@index([status])
   @@index([realm])
 }
@@ -936,6 +938,22 @@ model ServiceApiKey {
 
   createdBy   User      @relation(fields: [createdById], references: [id])
   createdById String
+}
+
+model AgendaObservation {
+  id              String   @id @default(cuid())
+  cityId          String
+  source          String
+  firstObservedAt DateTime
+  contentHash     String
+  meetingId       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([cityId, source])
+  @@index([cityId, meetingId])
 }
 
 // Personal access token for the MCP server. Unlike ServiceApiKey (superadmin,
