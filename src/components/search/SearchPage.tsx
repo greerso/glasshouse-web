@@ -132,7 +132,7 @@ export default function SearchPage() {
                 personIds: personId ? [personId] : undefined,
                 partyIds: partyId ? [partyId] : undefined,
                 config: {
-                    enableSemanticSearch: true,
+                    enableSemanticSearch: false,
                     size: PAGE_SIZE,
                     from: (page - 1) * PAGE_SIZE,
                     detailed: false

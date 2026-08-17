@@ -705,7 +705,7 @@ export async function mcpSearch(
         config: {
             size: args.pageSize,
             from: (args.page - 1) * args.pageSize,
-            enableSemanticSearch: true,
+            enableSemanticSearch: false,
             detailed: false,
         },
     });

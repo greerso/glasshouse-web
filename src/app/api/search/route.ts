@@ -5,7 +5,8 @@ import { searchRequestSchema } from '@/lib/zod-schemas/search';
 
 // Hardcoded search configuration
 const SEARCH_CONFIG = {
-    enableSemanticSearch: true,
+    // Self-hosted ES 8.17 basic license: no RRF, no semantic_text.
+    enableSemanticSearch: false,
     rankWindowSize: 100,
     rankConstant: 60
 } as const;

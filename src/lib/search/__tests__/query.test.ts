@@ -113,11 +113,22 @@ describe('buildFilters person filter', () => {
 });
 
 describe('buildSearchQuery filter-only mode', () => {
-    it('builds a ranked rrf query when query text is present', () => {
+    it('builds a BM25 query when query text is present and semantic search is off', () => {
         const q = buildSearchQuery({ query: 'πάρκα' }, NO_EXTRACTED_FILTERS);
 
-        expect(q.retriever).toBeDefined();
+        expect(q.retriever).toBeUndefined();
+        expect(q.query?.bool?.should).toBeDefined();
         expect(q.sort).toBeUndefined();
+    });
+
+    it('builds an rrf retriever when enableSemanticSearch is on', () => {
+        const q = buildSearchQuery(
+            { query: 'πάρκα', config: { enableSemanticSearch: true } },
+            NO_EXTRACTED_FILTERS
+        );
+
+        expect(q.retriever).toBeDefined();
+        expect(q.query).toBeUndefined();
     });
 
     it.each([undefined, '', '   '])(

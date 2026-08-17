@@ -151,79 +151,115 @@ export function buildSearchQuery(
         };
     }
 
-    return {
+    const standardQuery: estypes.QueryDslQueryContainer = {
+        bool: {
+            should: [
+                {
+                    // Multi-match query for regular fields
+                    multi_match: {
+                        query: queryText,
+                        fields: [
+                            'name^4',           // Highest boost - most important identifier
+                            'description^3',    // High boost - detailed content
+                            ...(extractedFilters.locationName ? ['location_text^3'] : []), // Add location text with high boost when location is extracted
+                        ],
+                        type: 'best_fields',
+                        operator: 'or'
+                    }
+                },
+                {
+                    // Nested query for speaker segments
+                    nested: {
+                        path: 'speaker_segments',
+                        query: {
+                            bool: {
+                                should: [
+                                    {
+                                        match: {
+                                            'speaker_segments.text': {
+                                                query: queryText,
+                                                boost: 2
+                                            }
+                                        }
+                                    },
+                                    {
+                                        match: {
+                                            'speaker_segments.summary': {
+                                                query: queryText,
+                                                boost: 2
+                                            }
+                                        }
+                                    }
+                                ],
+                                minimum_should_match: 1
+                            }
+                        },
+                        inner_hits: {
+                            _source: ['speaker_segments.segment_id']
+                        }
+                    }
+                },
+                {
+                    // Nested query for speaker contributions
+                    nested: {
+                        path: 'speaker_contributions',
+                        query: {
+                            match: {
+                                'speaker_contributions.text': {
+                                    query: queryText,
+                                    boost: 2
+                                }
+                            }
+                        },
+                        inner_hits: {
+                            _source: ['speaker_contributions.contribution_id']
+                        }
+                    }
+                }
+            ],
+            minimum_should_match: 1,
+            filter: buildFilters(mergedRequest)
+        }
+    };
+
+    const base = {
         index: env.ELASTICSEARCH_INDEX,
         size: request.config?.size || 10,
         from: request.config?.from || 0,
         track_total_hits: true,
+    };
+
+    // RRF + semantic retrievers need a Platinum/trial license and
+    // semantic_text fields. Self-hosted basic ES 8.17 (this deploy) has
+    // neither — use the BM25 query directly. Keep the RRF path for
+    // Elastic Cloud / licensed clusters that opt in via config.
+    if (!request.config?.enableSemanticSearch) {
+        return { ...base, query: standardQuery };
+    }
+
+    return {
+        ...base,
         retriever: {
             rrf: {
                 retrievers: [
+                    { standard: { query: standardQuery } },
                     {
                         standard: {
                             query: {
                                 bool: {
                                     should: [
                                         {
-                                            // Multi-match query for regular fields
-                                            multi_match: {
+                                            semantic: {
                                                 query: queryText,
-                                                fields: [
-                                                    'name^4',           // Highest boost - most important identifier
-                                                    'description^3',    // High boost - detailed content
-                                                    ...(extractedFilters.locationName ? ['location_text^3'] : []), // Add location text with high boost when location is extracted
-                                                ],
-                                                type: 'best_fields',
-                                                operator: 'or'
+                                                field: 'name.semantic',
+                                                boost: 2.0  // Higher boost for name
                                             }
                                         },
                                         {
-                                            // Nested query for speaker segments
-                                            nested: {
-                                                path: 'speaker_segments',
-                                                query: {
-                                                    bool: {
-                                                        should: [
-                                                            {
-                                                                match: {
-                                                                    'speaker_segments.text': {
-                                                                        query: queryText,
-                                                                        boost: 2
-                                                                    }
-                                                                }
-                                                            },
-                                                            {
-                                                                match: {
-                                                                    'speaker_segments.summary': {
-                                                                        query: queryText,
-                                                                        boost: 2
-                                                                    }
-                                                                }
-                                                            }
-                                                        ],
-                                                        minimum_should_match: 1
-                                                    }
-                                                },
-                                                inner_hits: {
-                                                    _source: ['speaker_segments.segment_id']
-                                                }
-                                            }
-                                        },
-                                        {
-                                            // Nested query for speaker contributions
-                                            nested: {
-                                                path: 'speaker_contributions',
-                                                query: {
-                                                    match: {
-                                                        'speaker_contributions.text': {
-                                                            query: queryText,
-                                                            boost: 2
-                                                        }
-                                                    }
-                                                },
-                                                inner_hits: {
-                                                    _source: ['speaker_contributions.contribution_id']
-                                                }
+                                            semantic: {
+                                                query: queryText,
+                                                field: 'description.semantic',
+                                                boost: 1.5  // Medium boost for description
                                             }
                                         }
                                     ],
@@ -232,35 +268,7 @@ export function buildSearchQuery(
                                 }
                             }
                         }
-                    },
-                    ...(request.config?.enableSemanticSearch ? [
-                        {
-                            standard: {
-                                query: {
-                                    bool: {
-                                        should: [
-                                            {
-                                                semantic: {
-                                                    query: queryText,
-                                                    field: 'name.semantic',
-                                                    boost: 2.0  // Higher boost for name
-                                                }
-                                            },
-                                            {
-                                                semantic: {
-                                                    query: queryText,
-                                                    field: 'description.semantic',
-                                                    boost: 1.5  // Medium boost for description
-                                                }
-                                            }
-                                        ],
-                                        minimum_should_match: 1,
-                                        filter: buildFilters(mergedRequest)
-                                    }
-                                }
-                            }
-                        }
-                    ] : [])
+                    }
                 ],
                 rank_window_size: request.config?.rankWindowSize || 100,
                 rank_constant: request.config?.rankConstant || 60
