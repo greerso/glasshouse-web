@@ -175,11 +175,8 @@ export function CityHeader({ city, councilMeetingsCount, cityMessage, hasNoData 
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.3 }}
                         >
-                            {city.realm === 'us'
-                                ? t('residentTagline')
-                                : t('councilMeetingsTracked', { count: councilMeetingsCount })}
+                            {t('councilMeetingsTracked', { count: councilMeetingsCount })}
                         </motion.div>
-                        {city.realm !== 'us' && (
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -193,7 +190,6 @@ export function CityHeader({ city, councilMeetingsCount, cityMessage, hasNoData 
                                 size="md"
                             />
                         </motion.div>
-                        )}
                     </div>
                 </motion.div>
                 <motion.div
