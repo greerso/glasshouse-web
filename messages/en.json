@@ -228,6 +228,8 @@
         "addCouncilMeeting": "Add Council Meeting",
         "councilMeetingsTracked": "{count, plural, =0 {No council meetings on OpenCouncil} =1 {1 council meeting on OpenCouncil} other {# council meetings on OpenCouncil}}",
         "councilMeetings": "Council Meetings",
+        "meetingsShort": "Meetings",
+        "residentTagline": "Who voted, what's on the ballot — independent of Town Hall",
         "people": "People",
         "elections": "Elections",
         "votes": "Votes",

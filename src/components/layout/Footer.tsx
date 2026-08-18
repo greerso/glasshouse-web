@@ -38,10 +38,12 @@ export default function Footer({ className, realm }: FooterProps) {
                             className="flex-shrink-0"
                             imageClassName="w-20 h-14"
                             textClassName="text-lg"
+                            wordmark={realm === 'us' ? 'Glasshouse' : 'OpenCouncil'}
                         />
                         <p className="text-xs text-muted-foreground md:text-left text-center max-w-sm">
-                            {t("tagline")}
+                            {realm === 'us' ? 'Thompson\'s Station votes and elections, independent of Town Hall.' : t("tagline")}
                         </p>
+                        {realm !== 'us' && (
                         <p className="text-xs text-muted-foreground md:text-left text-center max-w-sm">
                             {t.rich("companyDescription", {
                                 link: (chunks) => (
@@ -56,11 +58,19 @@ export default function Footer({ className, realm }: FooterProps) {
                                 ),
                             })}
                         </p>
+                        )}
                     </div>
                     <div className="flex flex-col items-center md:items-start space-y-4">
                         <h3 className="font-semibold text-foreground text-base">{t("linksHeading")}</h3>
                         <nav className="flex flex-col items-center md:items-start space-y-2">
-                            {[
+                            {(realm === 'us'
+                                ? [
+                                    { href: "/thompsons-station", label: t("linkHome") },
+                                    { href: "/thompsons-station/votes", label: "Votes" },
+                                    { href: "/thompsons-station/elections", label: "Elections" },
+                                    { href: "/search", label: t("linkSearch") },
+                                ]
+                                : [
                                 { href: "/", label: t("linkHome") },
                                 // /explain is written in Greek, about Greek municipalities — only link it where it exists
                                 ...(hasExplainPage(realm) ? [{ href: "/explain", label: t("linkLearnMore") }] : []),
@@ -70,7 +80,7 @@ export default function Footer({ className, realm }: FooterProps) {
                                 { href: "/docs", label: "API" },
                                 { href: "https://schemalabs.gr/jobs", label: t("linkJobs"), external: true },
                                 { href: "https://status.opencouncil.gr", label: "Status", external: true },
-                            ].map((link) => (
+                            ]).map((link) => (
                                 <Link
                                     key={link.href}
                                     href={link.href}
@@ -176,8 +186,8 @@ export default function Footer({ className, realm }: FooterProps) {
                     </Button>
                 </div>
                 <div className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center text-xs text-muted-foreground">
-                    <span>© {new Date().getFullYear()} OpenCouncil</span>
-                    <CountrySwitcher realm={realm} />
+                    <span>© {new Date().getFullYear()} {realm === 'us' ? 'Glasshouse' : 'OpenCouncil'}</span>
+                    {realm !== 'us' && <CountrySwitcher realm={realm} />}
                     <ScriptSwitcher />
                     {process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA && (
                         <a

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { CityHeader } from "@/components/cities/CityHeader";
 import { CityNavigation } from "@/components/cities/CityNavigation";
+import { CityResidentIntro } from "@/components/cities/CityResidentIntro";
 import { getCityCached, getCityMessageCached, getPartiesForCityCached, getPeopleForCityCached } from "@/lib/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { getNotificationPreferenceForCity } from "@/lib/db/notifications";
@@ -53,7 +54,9 @@ export default async function TabsLayout(
                     hasNotifications={hasNotifications}
                 />
 
-                <CityNavigation cityId={cityId} city={city as any} />
+                <CityResidentIntro cityId={cityId} realm={city.realm} />
+
+                <CityNavigation cityId={cityId} city={city} showParties={parties.length > 0} />
 
                 <Suspense fallback={
                     <div className="flex justify-center items-center h-32">

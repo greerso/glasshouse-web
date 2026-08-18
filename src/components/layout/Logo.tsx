@@ -8,15 +8,16 @@ interface LogoProps {
     imageClassName?: string;
     textClassName?: string;
     hideText?: boolean;
+    wordmark?: string;
 }
 
-const Logo = ({ className, imageClassName, textClassName, hideText = false }: LogoProps) => {
+const Logo = ({ className, imageClassName, textClassName, hideText = false, wordmark = 'OpenCouncil' }: LogoProps) => {
     return (
         <Link href="/" className={cn("flex items-center", className)}>
             <div className={cn("relative w-12 h-12", imageClassName)}>
                 <Image
                     src="/logo.png"
-                    alt="OpenCouncil Logo"
+                    alt={`${wordmark} logo`}
                     fill
                     sizes="(max-width: 768px) 40px, 48px, 128px"
                     style={{ objectFit: 'contain' }}
@@ -25,7 +26,7 @@ const Logo = ({ className, imageClassName, textClassName, hideText = false }: Lo
                 />
             </div>
             {!hideText && (
-                <span className={cn("text-2xl text-primary", textClassName)}>OpenCouncil</span>
+                <span className={cn("text-2xl text-primary", textClassName)}>{wordmark}</span>
             )}
         </Link>
     )

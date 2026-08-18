@@ -243,6 +243,8 @@
         "addCouncilMeeting": "Προσθήκη Συνεδρίασης",
         "councilMeetingsTracked": "{count, plural, =0 {Καμία συνεδρίαση στο OpenCouncil} =1 {1 συνεδρίαση στο OpenCouncil} other {# συνεδριάσεις στο OpenCouncil}}",
         "councilMeetings": "Συνεδριάσεις",
+        "meetingsShort": "Meetings",
+        "residentTagline": "Who voted, what's on the ballot — independent of Town Hall",
         "people": "Πρόσωπα",
         "elections": "Elections",
         "votes": "Votes",

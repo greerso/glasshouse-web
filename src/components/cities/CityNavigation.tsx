@@ -8,7 +8,8 @@ import { City } from '@prisma/client';
 
 type CityNavigationProps = {
     cityId: string;
-    city?: { consultationsEnabled: boolean };
+    city?: { consultationsEnabled: boolean; realm?: string };
+    showParties?: boolean;
 };
 
 // Custom NavLink component to handle active state styling
@@ -40,7 +41,7 @@ function NavLink({
     );
 }
 
-export function CityNavigation({ cityId, city }: CityNavigationProps) {
+export function CityNavigation({ cityId, city, showParties = true }: CityNavigationProps) {
     const t = useTranslations('City');
     const segment = useSelectedLayoutSegment();
 
@@ -60,7 +61,7 @@ export function CityNavigation({ cityId, city }: CityNavigationProps) {
                     segment={currentSegment}
                     matchSegment="meetings"
                 >
-                    {t('councilMeetings')}
+                    {city?.realm === 'us' ? t('meetingsShort') : t('councilMeetings')}
                 </NavLink>
                 <NavLink
                     href={`/${cityId}/people`}
@@ -83,6 +84,7 @@ export function CityNavigation({ cityId, city }: CityNavigationProps) {
                 >
                     {t('votes')}
                 </NavLink>
+                {showParties && (
                 <NavLink
                     href={`/${cityId}/parties`}
                     segment={currentSegment}
@@ -90,6 +92,7 @@ export function CityNavigation({ cityId, city }: CityNavigationProps) {
                 >
                     {t('parties')}
                 </NavLink>
+                )}
                 {city?.consultationsEnabled && (
                     <NavLink
                         href={`/${cityId}/consultations`}
