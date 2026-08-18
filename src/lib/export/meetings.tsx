@@ -14,7 +14,7 @@ export class AudioExportError extends Error {
     }
 }
 
-export type MeetingDataForExport = Omit<MeetingData, 'parties' | 'highlights' | 'subjects' | 'speakerTags' | 'taskStatus' | 'transcriptHiddenForReview'>;
+export type MeetingDataForExport = Omit<MeetingData, 'parties' | 'highlights' | 'subjects' | 'speakerTags' | 'taskStatus' | 'transcriptHiddenForReview' | 'meetingAttendance'>;
 
 export async function exportMeetingToDocx(data: MeetingDataForExport): Promise<Blob> {
   const { city, meeting, transcript, people } = data;
