@@ -70,6 +70,13 @@ export function CityNavigation({ cityId, city }: CityNavigationProps) {
                     {t('people')}
                 </NavLink>
                 <NavLink
+                    href={`/${cityId}/elections`}
+                    segment={currentSegment}
+                    matchSegment="elections"
+                >
+                    {t('elections')}
+                </NavLink>
+                <NavLink
                     href={`/${cityId}/parties`}
                     segment={currentSegment}
                     matchSegment="parties"

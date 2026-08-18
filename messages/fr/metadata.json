@@ -32,5 +32,12 @@
   "parties": {
     "title": "Groupes | {cityName} | OpenCouncil",
     "description": "Les groupes politiques de {cityName}, leurs membres et leur activité au conseil municipal."
+  },
+  "elections": {
+    "shortTitle": "Elections | {cityName}",
+    "notFoundTitle": "Elections | {cityName}",
+    "notFoundDescription": "No election file for this city.",
+    "description": "Municipal election information for {cityName}.",
+    "ogAlt": "Elections | {cityName}"
   }
 }

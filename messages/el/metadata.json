@@ -32,5 +32,12 @@
   "parties": {
     "title": "Παρατάξεις | {cityName} | OpenCouncil",
     "description": "Οι δημοτικές παρατάξεις του δήμου {cityName}, τα μέλη τους και η δραστηριότητά τους στο δημοτικό συμβούλιο."
+  },
+  "elections": {
+    "shortTitle": "Elections | {cityName}",
+    "notFoundTitle": "Elections | {cityName}",
+    "notFoundDescription": "No election file for this city.",
+    "description": "Municipal election information for {cityName}.",
+    "ogAlt": "Elections | {cityName}"
   }
 }

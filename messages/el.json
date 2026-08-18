@@ -244,6 +244,7 @@
         "councilMeetingsTracked": "{count, plural, =0 {Καμία συνεδρίαση στο OpenCouncil} =1 {1 συνεδρίαση στο OpenCouncil} other {# συνεδριάσεις στο OpenCouncil}}",
         "councilMeetings": "Συνεδριάσεις",
         "people": "Πρόσωπα",
+        "elections": "Elections",
         "parties": "Παρατάξεις",
         "consultations": "Διαβουλεύσεις",
         "membersComingSoon": "Τα μέλη θα είναι σύντομα διαθέσιμα",
@@ -1208,5 +1209,22 @@
         "copy": "Αντιγραφή",
         "startFrom": "Ξεκίνημα από το {timestamp}",
         "exportPreviewAsImage": "Εξαγωγή Προεπισκόπησης ως Εικόνα"
+    },
+    "Elections": {
+        "empty": "No election file for this city.",
+        "seatsHeading": "Seats",
+        "namesPending": "Certified names appear here after the Williamson County Election Commission publishes the list.",
+        "columnOffice": "Office",
+        "columnName": "Name",
+        "columnStatus": "Status",
+        "statusWithdrawn": "Withdrawn",
+        "datesHeading": "Dates",
+        "dateQualifying": "Qualifying deadline",
+        "dateWithdrawal": "Withdrawal deadline",
+        "dateRegistration": "Voter registration deadline",
+        "dateEarlyVote": "Early voting",
+        "dateElectionDay": "Election day",
+        "linksHeading": "How to vote / how to file",
+        "sourceHeading": "Source"
     }
 }

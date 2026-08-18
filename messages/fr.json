@@ -244,6 +244,7 @@
     "councilMeetingsTracked": "{count, plural, =0 {Aucune séance sur OpenCouncil} =1 {1 séance sur OpenCouncil} other {# séances sur OpenCouncil}}",
     "councilMeetings": "Séances",
     "people": "Personnes",
+    "elections": "Elections",
     "parties": "Groupes",
     "consultations": "Consultations",
     "membersComingSoon": "Les membres seront bientôt disponibles",
@@ -1208,5 +1209,22 @@
     "copy": "Copier",
     "startFrom": "Démarrer à {timestamp}",
     "exportPreviewAsImage": "Exporter l'aperçu en image"
+  },
+  "Elections": {
+    "empty": "No election file for this city.",
+    "seatsHeading": "Seats",
+    "namesPending": "Certified names appear here after the Williamson County Election Commission publishes the list.",
+    "columnOffice": "Office",
+    "columnName": "Name",
+    "columnStatus": "Status",
+    "statusWithdrawn": "Withdrawn",
+    "datesHeading": "Dates",
+    "dateQualifying": "Qualifying deadline",
+    "dateWithdrawal": "Withdrawal deadline",
+    "dateRegistration": "Voter registration deadline",
+    "dateEarlyVote": "Early voting",
+    "dateElectionDay": "Election day",
+    "linksHeading": "How to vote / how to file",
+    "sourceHeading": "Source"
   }
 }
