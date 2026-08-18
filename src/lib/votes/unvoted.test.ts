@@ -1,6 +1,8 @@
 import {
     isCancelledMeetingName,
     isProceduralSubjectName,
+    partitionUnvoted,
+    selectAwaitingMeetings,
     unvotedKind,
 } from './unvoted';
 
@@ -79,5 +81,110 @@ describe('unvotedKind', () => {
         expect(unvotedKind(new Date('2026-08-11T12:00:01.000Z'), now)).toBe(
             'upcoming',
         );
+    });
+});
+
+function awaitingSubject(
+    meetingId: string,
+    meetingDateTime: string,
+    subjectId = meetingId,
+) {
+    return {
+        subjectId,
+        subjectName: subjectId,
+        meetingId,
+        meetingDateTime: new Date(meetingDateTime),
+        meetingName: 'Board of Mayor and Aldermen',
+    };
+}
+
+describe('selectAwaitingMeetings', () => {
+    it('keeps the 5 most recent of 7 meetings and reports 2 older', () => {
+        const subjects = [
+            awaitingSubject('2023-01', '2023-01-10T23:00:00.000Z'),
+            awaitingSubject('2023-03', '2023-03-14T23:00:00.000Z'),
+            awaitingSubject('2023-06', '2023-06-13T23:00:00.000Z'),
+            awaitingSubject('2024-02', '2024-02-13T23:00:00.000Z'),
+            awaitingSubject('2025-01', '2025-01-14T23:00:00.000Z'),
+            awaitingSubject('2026-05', '2026-05-12T23:00:00.000Z'),
+            awaitingSubject('2026-08', '2026-08-11T23:00:00.000Z'),
+        ];
+
+        const { awaiting, olderCount } = selectAwaitingMeetings(subjects);
+
+        expect(olderCount).toBe(2);
+        expect(awaiting.map((subject) => subject.meetingId)).toEqual([
+            '2023-06',
+            '2024-02',
+            '2025-01',
+            '2026-05',
+            '2026-08',
+        ]);
+    });
+});
+
+describe('partitionUnvoted', () => {
+    const now = new Date('2026-08-18T12:00:00.000Z');
+
+    it('does not list consent children as awaiting after the parent was voted', () => {
+        const meetingDateTime = new Date('2026-08-11T23:00:00.000Z');
+        const unvoted = [
+            {
+                subjectId: 'minutes',
+                subjectName: 'Approval of the Minutes of the July 14, 2026 Meeting',
+                meetingId: 'aug-11',
+                meetingDateTime,
+                meetingName: 'Board of Mayor and Aldermen',
+            },
+            {
+                subjectId: 'contract',
+                subjectName: 'Approval Contract with Vendor',
+                meetingId: 'aug-11',
+                meetingDateTime,
+                meetingName: 'Board of Mayor and Aldermen',
+            },
+        ];
+        const voted = [
+            {
+                subjectId: 'consent',
+                subjectName: 'Consent Agenda:',
+                meetingId: 'aug-11',
+                meetingDateTime,
+                result: {
+                    yayCount: 5,
+                    nayCount: 0,
+                    abstainCount: 0,
+                    outcome: 'PASSED' as const,
+                },
+            },
+        ];
+
+        const { awaiting, upcoming, olderAwaitingCount } = partitionUnvoted(
+            unvoted,
+            now,
+            voted,
+        );
+
+        expect(awaiting).toEqual([]);
+        expect(upcoming).toEqual([]);
+        expect(olderAwaitingCount).toBe(0);
+    });
+
+    it('still lists unvoted agenda items on upcoming meetings that have a voted parent', () => {
+        const meetingDateTime = new Date('2026-09-08T23:00:00.000Z');
+        const child = {
+            subjectId: 'minutes',
+            subjectName: 'Approval of the Minutes of the July 14, 2026 Meeting',
+            meetingId: 'sept-8',
+            meetingDateTime,
+            meetingName: 'Board of Mayor and Aldermen',
+        };
+
+        const { upcoming, awaiting } = partitionUnvoted([child], now, [
+            { meetingId: 'sept-8' },
+        ]);
+
+        expect(upcoming).toEqual([child]);
+        expect(awaiting).toEqual([]);
     });
 });

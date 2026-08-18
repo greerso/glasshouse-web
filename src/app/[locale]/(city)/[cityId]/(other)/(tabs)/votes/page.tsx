@@ -9,12 +9,12 @@ import { getLocalizedName } from '@/lib/formatters/name';
 import { isUserAuthorizedToEdit } from '@/lib/auth';
 import { civilDayBounds } from '@/lib/dates/civil';
 import { parseVoteFeedParams } from '@/lib/votes/params';
-import { loadVoteFeedData, VoteWindowTooLarge, type UnvotedFeedSubject } from '@/lib/db/voteFeed';
+import { loadVoteFeedData, VoteWindowTooLarge } from '@/lib/db/voteFeed';
 import { chooseVotes } from '@/lib/votes/choose';
 import { paginateVoted } from '@/lib/votes/paginate';
 import { buildAgreement } from '@/lib/votes/agreement';
 import { compareRanks } from '@/lib/sorting/people';
-import { isCancelledMeetingName, isProceduralSubjectName, unvotedKind } from '@/lib/votes/unvoted';
+import { partitionUnvoted } from '@/lib/votes/unvoted';
 import VoteFeed from '@/components/votes/VoteFeed';
 import VoteAgreement from '@/components/votes/VoteAgreement';
 import VoteFilters from '@/components/votes/VoteFilters';
@@ -22,7 +22,6 @@ import { voteFeedHrefWith } from '@/components/votes/href';
 import type { Metadata } from 'next';
 
 const PAGE_SIZE = 25;
-const AWAITING_MEETING_CAP = 5;
 
 export async function generateMetadata(props: {
     params: Promise<{ cityId: string; locale: string }>;
@@ -77,40 +76,6 @@ function messageTemplate(
         throw new Error(`Votes.${key} must be a string`);
     }
     return raw;
-}
-
-function partitionUnvoted(
-    unvoted: UnvotedFeedSubject[],
-    now: Date,
-): {
-    upcoming: UnvotedFeedSubject[];
-    awaiting: UnvotedFeedSubject[];
-    olderAwaitingCount: number;
-} {
-    const kept = unvoted.filter(
-        (subject) =>
-            !isCancelledMeetingName(subject.meetingName) &&
-            !isProceduralSubjectName(subject.subjectName),
-    );
-    const upcoming = kept
-        .filter((subject) => unvotedKind(subject.meetingDateTime, now) === 'upcoming')
-        .sort((a, b) => b.meetingDateTime.getTime() - a.meetingDateTime.getTime());
-
-    const awaitingSubjects = kept.filter(
-        (subject) => unvotedKind(subject.meetingDateTime, now) === 'awaiting',
-    );
-    const byMeeting = new Map<string, UnvotedFeedSubject[]>();
-    for (const subject of awaitingSubjects) {
-        const group = byMeeting.get(subject.meetingId);
-        if (group) group.push(subject);
-        else byMeeting.set(subject.meetingId, [subject]);
-    }
-    const meetings = [...byMeeting.values()].sort(
-        (a, b) => a[0].meetingDateTime.getTime() - b[0].meetingDateTime.getTime(),
-    );
-    const olderAwaitingCount = Math.max(0, meetings.length - AWAITING_MEETING_CAP);
-    const awaiting = meetings.slice(0, AWAITING_MEETING_CAP).flat();
-    return { upcoming, awaiting, olderAwaitingCount };
 }
 
 export default async function Page(props: {
@@ -199,6 +164,7 @@ export default async function Page(props: {
     const { upcoming, awaiting, olderAwaitingCount } = partitionUnvoted(
         data.unvoted,
         new Date(),
+        data.voted,
     );
     const votedForPerson = params.personId
         ? data.voted.filter((subject) =>
