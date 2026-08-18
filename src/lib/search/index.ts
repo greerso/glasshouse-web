@@ -283,7 +283,8 @@ export async function search(
                     matchedSpeakerSegmentIds,
                     councilMeeting: subject.councilMeeting,
                     votes: [],
-                    attendance: []
+                    attendance: [],
+                    voteResult: null,
                 };
 
                 // If detailed results are requested, add speaker segment text
