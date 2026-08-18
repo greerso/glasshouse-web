@@ -506,6 +506,7 @@ model Subject {
   decision Decision?
   attendance SubjectAttendance[]
   votes SubjectVote[]
+  voteResult SubjectVoteResult?
 
   // Temporary field for ADA conflict resolution.
   // Set when a poll detects that an ADA already belongs to another subject's decision.
@@ -589,6 +590,7 @@ model MeetingAttendance {
 
   status AttendanceStatus // PRESENT | ABSENT at session start (initial roll call)
   source DataSource       // decision | transcript | manual
+  reviewStatus ReviewStatus @default(unreviewed)
 
   // Track whether added by task or manually by user
   task      TaskStatus? @relation(fields: [taskId], references: [id], onDelete: SetNull)
@@ -614,6 +616,7 @@ model SubjectVote {
 
   voteType VoteType
   source   DataSource
+  reviewStatus ReviewStatus @default(unreviewed)
 
   // Track whether added by task or manually by user
   task      TaskStatus? @relation(fields: [taskId], references: [id], onDelete: SetNull)
@@ -635,9 +638,43 @@ enum VoteType {
 }
 
 enum DataSource {
-  decision    // Extracted from decision PDF
+  decision    // Official written record (Diavgeia decision PDF *or* minutes PDF)
   transcript  // Derived from transcript analysis
   manual      // Manually entered by admin
+  inferred    // Unanimous voice vote expanded from recorded attendance
+}
+
+enum ReviewStatus {
+  unreviewed
+  approved
+}
+
+enum VoteOutcome {
+  PASSED
+  FAILED
+}
+
+enum VoteKind {
+  ROLL_CALL
+  VOICE
+}
+
+model SubjectVoteResult {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId    String       @unique
+  outcome      VoteOutcome
+  yayCount     Int
+  nayCount     Int
+  abstainCount Int          @default(0)
+  kind         VoteKind
+  motionText   String?
+  source       DataSource
+  reviewStatus ReviewStatus @default(unreviewed)
+
+  @@index([subjectId])
 }
 
 enum LocationType {
