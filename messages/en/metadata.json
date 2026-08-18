@@ -39,5 +39,12 @@
     "notFoundDescription": "No election file for this city.",
     "description": "Municipal election information for {cityName}.",
     "ogAlt": "Elections | {cityName}"
+  },
+  "votes": {
+    "shortTitle": "Votes | {cityName}",
+    "notFoundTitle": "Votes | {cityName}",
+    "notFoundDescription": "Votes are not available.",
+    "description": "Recorded votes and posted agendas for {cityName}.",
+    "ogAlt": "Votes | {cityName}"
   }
 }

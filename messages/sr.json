@@ -230,6 +230,7 @@
         "councilMeetings": "Седнице скупштине",
         "people": "Особе",
         "elections": "Elections",
+        "votes": "Votes",
         "parties": "Одборничке групе",
         "consultations": "Јавне расправе",
         "membersComingSoon": "Чланови ће ускоро бити доступни",
@@ -1226,5 +1227,29 @@
         "dateElectionDay": "Election day",
         "linksHeading": "How to vote / how to file",
         "sourceHeading": "Source"
+    },
+    "Votes": {
+        "title": "Votes",
+        "onTheAgenda": "On the agenda",
+        "awaitingMinutes": "Awaiting minutes",
+        "olderAwaiting": "{count} older meetings awaiting minutes",
+        "noVotes": "No votes match these filters.",
+        "showAllOutcomes": "Show all outcomes",
+        "tabFeed": "Feed",
+        "tabAgreement": "Agreement",
+        "viewSplits": "Splits",
+        "viewNamed": "Named",
+        "viewAll": "All",
+        "bodyAll": "All bodies",
+        "unreviewed": "Unreviewed",
+        "inferred": "Inferred",
+        "passed": "PASSED",
+        "failed": "FAILED",
+        "noNamed": "No named votes in this range.",
+        "namedCount": "Named items: {count}",
+        "unanimousCount": "Unanimous: {count}",
+        "splitCount": "Splits: {count}",
+        "coverageLine": "{name} named on {n} of {m} items",
+        "narrowDates": "This window has too many votes. Set from and to dates to narrow the range."
     }
 }
