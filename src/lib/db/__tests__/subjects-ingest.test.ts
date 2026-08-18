@@ -59,4 +59,50 @@ describe('upsertIngestSubjects', () => {
             },
         });
     });
+
+    it('updates the existing out-of-agenda row when name and nonAgendaReason match', async () => {
+        mockFindMany.mockResolvedValue([{
+            id: 'amd-1',
+            name: 'Amendment: Ordinance 2026-014',
+            nonAgendaReason: 'outOfAgenda',
+            agendaItemIndex: null,
+        }]);
+        mockUpdate.mockResolvedValue({ id: 'amd-1', name: 'Amendment: Ordinance 2026-014' });
+
+        await upsertIngestSubjects('thompsons-station', 'champds-377', [
+            { name: 'Amendment: Ordinance 2026-014', description: '', nonAgendaReason: 'outOfAgenda' },
+        ]);
+
+        expect(mockCreate).not.toHaveBeenCalled();
+        expect(mockUpdate).toHaveBeenCalledWith({
+            where: { id: 'amd-1' },
+            data: {
+                name: 'Amendment: Ordinance 2026-014',
+                description: '',
+                contextCitationUrls: [],
+            },
+        });
+    });
+
+    it('creates an out-of-agenda subject when name and nonAgendaReason are new', async () => {
+        mockFindMany.mockResolvedValue([]);
+        mockCreate.mockResolvedValue({ id: 'amd-new', nonAgendaReason: 'outOfAgenda' });
+
+        await upsertIngestSubjects('thompsons-station', 'champds-377', [
+            { name: 'Amendment: Ordinance 2026-014', description: '', nonAgendaReason: 'outOfAgenda' },
+        ]);
+
+        expect(mockUpdate).not.toHaveBeenCalled();
+        expect(mockCreate).toHaveBeenCalledWith({
+            data: {
+                name: 'Amendment: Ordinance 2026-014',
+                description: '',
+                agendaItemIndex: null,
+                nonAgendaReason: 'outOfAgenda',
+                cityId: 'thompsons-station',
+                councilMeetingId: 'champds-377',
+                contextCitationUrls: [],
+            },
+        });
+    });
 });

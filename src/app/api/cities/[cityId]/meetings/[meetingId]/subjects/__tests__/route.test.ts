@@ -41,6 +41,19 @@ describe('POST /meetings/:id/subjects', () => {
         );
     });
 
+    it('accepts nonAgendaReason and upserts out-of-agenda subjects', async () => {
+        mockUpsert.mockResolvedValue([{ id: 'amd-1', nonAgendaReason: 'outOfAgenda' }] as any);
+        const res = await POST(makePost({
+            subjects: [{ name: 'Amendment: Ordinance 2026-014', description: '', nonAgendaReason: 'outOfAgenda' }],
+        }) as any, { params: Promise.resolve({ cityId: 'thompsons-station', meetingId: 'champds-377' }) });
+        expect(res.status).toBe(200);
+        expect(mockUpsert).toHaveBeenCalledWith(
+            'thompsons-station',
+            'champds-377',
+            [expect.objectContaining({ name: 'Amendment: Ordinance 2026-014', nonAgendaReason: 'outOfAgenda' })],
+        );
+    });
+
     it('returns 401 when auth throws', async () => {
         const { UnauthorizedError } = await import('@/lib/api/errors');
         mockAuth.mockRejectedValue(new UnauthorizedError('Invalid API key'));
