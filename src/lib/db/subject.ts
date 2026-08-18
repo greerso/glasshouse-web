@@ -9,6 +9,9 @@ import {
     Location,
     Topic,
     VoteType,
+    DataSource,
+    ReviewStatus,
+    SubjectVoteResult,
     Prisma,
     Realm,
     AdministrativeBodyType,
@@ -75,6 +78,8 @@ const personWithElectedOrderSelect = {
 const votesInclude = {
     select: {
         voteType: true,
+        source: true,
+        reviewStatus: true,
         person: personWithElectedOrderSelect,
     },
     orderBy: { person: { name: 'asc' as const } },
@@ -109,8 +114,9 @@ export type SubjectWithRelations = Subject & {
     introducedBy: PersonWithRelations | null;
     discussedIn: (Subject & { topic: Topic | null }) | null;
     decision: Decision | null;
-    votes: { voteType: VoteType; person: { id: string; name: string; roles: { electedOrder: number | null; administrativeBodyId: string | null }[] } }[];
+    votes: { voteType: VoteType; source: DataSource; reviewStatus: ReviewStatus; person: { id: string; name: string; roles: { electedOrder: number | null; administrativeBodyId: string | null }[] } }[];
     attendance: { status: 'PRESENT' | 'ABSENT'; person: { id: string; name: string; roles: { electedOrder: number | null; administrativeBodyId: string | null }[] } }[];
+    voteResult: SubjectVoteResult | null;
 };
 
 /**
@@ -500,6 +506,7 @@ export async function getAllSubjects(): Promise<SubjectWithRelations[]> {
                 },
                 votes: votesInclude,
                 attendance: attendanceInclude,
+                voteResult: true,
             },
         });
         return subjects;
@@ -541,6 +548,7 @@ export async function getSubjectsForMeeting(cityId: string, councilMeetingId: st
                 },
                 votes: votesInclude,
                 attendance: attendanceInclude,
+                voteResult: true,
             },
         });
 
@@ -607,6 +615,7 @@ export async function getSubject(subjectId: string): Promise<SubjectWithRelation
                 },
                 votes: votesInclude,
                 attendance: attendanceInclude,
+                voteResult: true,
             },
         });
 

@@ -219,7 +219,17 @@ export async function getExtractedDataForMeeting(
 const meetingAttendanceSelect = {
     personId: true,
     status: true,
-    person: { select: { name: true } },
+    reviewStatus: true,
+    person: {
+        select: {
+            id: true,
+            name: true,
+            roles: {
+                select: { electedOrder: true, administrativeBodyId: true },
+                where: { electedOrder: { not: null } },
+            },
+        },
+    },
 } satisfies Prisma.MeetingAttendanceSelect;
 
 export type MeetingAttendanceRecord = Prisma.MeetingAttendanceGetPayload<{ select: typeof meetingAttendanceSelect }>;

@@ -32,7 +32,7 @@ import { useLocalizeText } from "@/hooks/useLocalizeText";
 import { getLocalizedName } from "@/lib/formatters/name";
 
 export default function Subject({ subjectId }: { subjectId?: string }) {
-    const { subjects, getSpeakerTag, getPerson, getParty, meeting, city } = useCouncilMeetingData();
+    const { subjects, getSpeakerTag, getPerson, getParty, meeting, city, meetingAttendance } = useCouncilMeetingData();
     const { seekToAndPlay } = useVideo();
     const t = useTranslations("Subject");
     const locale = useLocale();
@@ -91,10 +91,30 @@ export default function Subject({ subjectId }: { subjectId?: string }) {
         return feature ? [feature] : [];
     }, [subject, location]);
 
-    // Calculate vote result from extracted data
-    const voteResult = useMemo(
-        () => subject.votes && subject.votes.length > 0 ? calculateVoteResult(subject.votes) : null,
-        [subject.votes]
+    const hasExtractedVotes = (subject.votes?.length ?? 0) > 0 || !!subject.voteResult;
+
+    const voteSummary = useMemo(() => {
+        if (subject.voteResult) {
+            const { yayCount, nayCount, abstainCount, outcome } = subject.voteResult;
+            const totalVotes = yayCount + nayCount + abstainCount;
+            return {
+                forCount: yayCount,
+                againstCount: nayCount,
+                abstainCount,
+                totalVotes,
+                isUnanimous: totalVotes > 0 && nayCount === 0 && abstainCount === 0,
+                passed: outcome === 'PASSED',
+            };
+        }
+        return subject.votes && subject.votes.length > 0 ? calculateVoteResult(subject.votes) : null;
+    }, [subject.votes, subject.voteResult]);
+
+    const rollCallAttendance = useMemo(
+        () => (meetingAttendance ?? []).map((row) => ({
+            status: row.status,
+            person: row.person,
+        })),
+        [meetingAttendance],
     );
 
     // The effective decision: local override (from polling) or server-rendered
@@ -517,28 +537,33 @@ export default function Subject({ subjectId }: { subjectId?: string }) {
                     )}
                 </CollapsibleCard>
 
-                {/* Voting Section (skip for withdrawn subjects; counselors only, hidden from the public) */}
-                {!subject.withdrawn && options.editsAllowed && <CollapsibleCard
+                {/* Voting Section: public when extracted votes exist; utterance fallback stays admin-gated */}
+                {!subject.withdrawn && (hasExtractedVotes || options.editsAllowed) && <CollapsibleCard
                     icon={<CheckSquare className="w-4 h-4" />}
                     title={
-                        voteResult && voteResult.totalVotes > 0 ? (
+                        voteSummary && voteSummary.totalVotes > 0 ? (
                             <span className="flex items-center gap-2">
                                 {t("voting")}
                                 <Badge variant="secondary" className="text-xs">
-                                    {voteResult.isUnanimous
-                                        ? t("unanimous", { count: voteResult.forCount })
-                                        : voteResult.passed
-                                            ? t("majorityVote", { for: voteResult.forCount, against: voteResult.againstCount })
-                                            : t("rejected", { against: voteResult.againstCount, for: voteResult.forCount })}
-                                    {!voteResult.isUnanimous && voteResult.abstainCount > 0 &&
-                                        `, ${voteResult.abstainCount} ${t("voteAbstain")}`}
+                                    {voteSummary.isUnanimous
+                                        ? t("unanimous", { count: voteSummary.forCount })
+                                        : voteSummary.passed
+                                            ? t("majorityVote", { for: voteSummary.forCount, against: voteSummary.againstCount })
+                                            : t("rejected", { against: voteSummary.againstCount, for: voteSummary.forCount })}
+                                    {!voteSummary.isUnanimous && voteSummary.abstainCount > 0 &&
+                                        `, ${voteSummary.abstainCount} ${t("voteAbstain")}`}
                                 </Badge>
                             </span>
                         ) : t("voting")
                     }
-                    defaultOpen={false}
+                    defaultOpen={hasExtractedVotes}
                 >
-                    <VotingSection subjectId={subject.id} votes={subject.votes} attendance={subject.attendance} />
+                    <VotingSection
+                        subjectId={subject.id}
+                        votes={subject.votes}
+                        voteResult={subject.voteResult}
+                        attendance={rollCallAttendance}
+                    />
                 </CollapsibleCard>}
 
                 {/* Admin Section - internal signals, only for users authorized to edit */}

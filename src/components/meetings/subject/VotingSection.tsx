@@ -1,14 +1,18 @@
 "use client";
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 import { useCouncilMeetingData } from '../CouncilMeetingDataContext';
 import { UtteranceMiniTranscript } from './UtteranceMiniTranscript';
 import { calculateVoteResult, getAbsentNonVoterIds } from '@/lib/utils/votes';
+import { voteBadgeState } from '@/lib/utils/voteBadges';
 import { compareRanks } from '@/lib/sorting/people';
 import { formatSurnameFirst } from '@/lib/formatters/name';
 import { isMayorRole, isRoleActiveAt } from '@/lib/utils/roles';
-import { VoteType } from '@prisma/client';
+import { DataSource, ReviewStatus, VoteOutcome, VoteType } from '@prisma/client';
 import { Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface VotingUtterance {
     id: string;
@@ -39,7 +43,18 @@ interface VotingUtterance {
 
 interface Vote {
     voteType: VoteType;
+    source: DataSource;
+    reviewStatus: ReviewStatus;
     person: { id: string; name: string; roles: { electedOrder: number | null; administrativeBodyId: string | null }[] };
+}
+
+interface VoteResultRow {
+    outcome: VoteOutcome;
+    yayCount: number;
+    nayCount: number;
+    abstainCount: number;
+    source: DataSource;
+    reviewStatus: ReviewStatus;
 }
 
 interface AttendanceRecord {
@@ -51,6 +66,7 @@ interface VotingSectionProps {
     subjectId: string;
     votes: Vote[];
     attendance?: AttendanceRecord[];
+    voteResult?: VoteResultRow | null;
 }
 
 function sortByElectedOrder<T extends { person: { name: string; roles: { electedOrder: number | null; administrativeBodyId: string | null }[] } }>(
@@ -65,11 +81,24 @@ function sortByElectedOrder<T extends { person: { name: string; roles: { elected
     });
 }
 
-function VoteBreakdown({ votes, attendance }: { votes: Vote[]; attendance: AttendanceRecord[] }) {
+function VoteBreakdown({ votes, attendance, voteResult }: { votes: Vote[]; attendance: AttendanceRecord[]; voteResult?: VoteResultRow | null }) {
     const t = useTranslations('Subject');
     const { meeting, people } = useCouncilMeetingData();
     const administrativeBodyId = meeting.administrativeBodyId ?? null;
-    const result = useMemo(() => calculateVoteResult(votes), [votes]);
+    const named = votes.length > 0;
+    const result = useMemo(() => {
+        if (voteResult) {
+            const totalVotes = voteResult.yayCount + voteResult.nayCount + voteResult.abstainCount;
+            return {
+                forCount: voteResult.yayCount,
+                againstCount: voteResult.nayCount,
+                abstainCount: voteResult.abstainCount,
+                isUnanimous: totalVotes > 0 && voteResult.nayCount === 0 && voteResult.abstainCount === 0,
+                passed: voteResult.outcome === VoteOutcome.PASSED,
+            };
+        }
+        return calculateVoteResult(votes);
+    }, [votes, voteResult]);
 
     const mayorPersonId = useMemo(() => {
         const meetingDate = new Date(meeting.dateTime);
@@ -115,37 +144,37 @@ function VoteBreakdown({ votes, attendance }: { votes: Vote[]; attendance: Atten
                                     : t('rejectedVerdict')}
                         </td>
                     </tr>
-                    {forVoters.length > 0 && (
+                    {(named ? forVoters.length > 0 : result.forCount > 0) && (
                         <tr>
                             <td className="py-1.5 pr-4 text-muted-foreground font-medium whitespace-nowrap align-top">
-                                {t('voteFor')} ({forVoters.length})
+                                {t('voteFor')} ({result.forCount})
                             </td>
                             <td className="py-1.5">
-                                {forVoters.map(v => formatSurnameFirst(v.person.name)).join(', ')}
+                                {named ? forVoters.map(v => formatSurnameFirst(v.person.name)).join(', ') : null}
                             </td>
                         </tr>
                     )}
-                    {againstVoters.length > 0 && (
+                    {(named ? againstVoters.length > 0 : result.againstCount > 0) && (
                         <tr>
                             <td className="py-1.5 pr-4 text-muted-foreground font-medium whitespace-nowrap align-top">
-                                {t('voteAgainst')} ({againstVoters.length})
+                                {t('voteAgainst')} ({result.againstCount})
                             </td>
                             <td className="py-1.5">
-                                {againstVoters.map(v => formatSurnameFirst(v.person.name)).join(', ')}
+                                {named ? againstVoters.map(v => formatSurnameFirst(v.person.name)).join(', ') : null}
                             </td>
                         </tr>
                     )}
-                    {abstainVoters.length > 0 && (
+                    {(named ? abstainVoters.length > 0 : result.abstainCount > 0) && (
                         <tr>
                             <td className="py-1.5 pr-4 text-muted-foreground font-medium whitespace-nowrap align-top">
-                                {t('voteAbstain')} ({abstainVoters.length})
+                                {t('voteAbstain')} ({result.abstainCount})
                             </td>
                             <td className="py-1.5">
-                                {abstainVoters.map(v => formatSurnameFirst(v.person.name)).join(', ')}
+                                {named ? abstainVoters.map(v => formatSurnameFirst(v.person.name)).join(', ') : null}
                             </td>
                         </tr>
                     )}
-                    {presentVoters.length > 0 && (
+                    {named && presentVoters.length > 0 && (
                         <tr>
                             <td className="py-1.5 pr-4 text-muted-foreground font-medium whitespace-nowrap align-top">
                                 {t('votePresent')} ({presentVoters.length})
@@ -155,7 +184,7 @@ function VoteBreakdown({ votes, attendance }: { votes: Vote[]; attendance: Atten
                             </td>
                         </tr>
                     )}
-                    {didNotVoteVoters.length > 0 && (
+                    {named && didNotVoteVoters.length > 0 && (
                         <tr>
                             <td className="py-1.5 pr-4 text-muted-foreground font-medium whitespace-nowrap align-top">
                                 {t('voteDidNotVote')} ({didNotVoteVoters.length})
@@ -165,7 +194,7 @@ function VoteBreakdown({ votes, attendance }: { votes: Vote[]; attendance: Atten
                             </td>
                         </tr>
                     )}
-                    {absentMembers.length > 0 && (
+                    {named && absentMembers.length > 0 && (
                         <tr>
                             <td className="py-1.5 pr-4 text-muted-foreground font-medium whitespace-nowrap align-top">
                                 {t('voteAbsent')} ({absentMembers.length})
@@ -177,6 +206,11 @@ function VoteBreakdown({ votes, attendance }: { votes: Vote[]; attendance: Atten
                     )}
                 </tbody>
             </table>
+            {!named && voteResult && (
+                <p className="text-xs text-muted-foreground">
+                    {t('voteOutcomeOnly')}
+                </p>
+            )}
         </div>
     );
 }
@@ -206,13 +240,17 @@ function VotingUtterancesDisplay({ utterancesBySegment, getSpeakerSegmentById, c
     );
 }
 
-export function VotingSection({ subjectId, votes, attendance }: VotingSectionProps) {
+export function VotingSection({ subjectId, votes, attendance, voteResult }: VotingSectionProps) {
     const [votingUtterances, setVotingUtterances] = useState<VotingUtterance[] | null>(null);
     const [loading, setLoading] = useState(true);
+    const [approving, setApproving] = useState(false);
     const { meeting, getSpeakerSegmentById } = useCouncilMeetingData();
     const t = useTranslations('Subject');
+    const { data: session } = useSession();
+    const isSuperAdmin = session?.user?.isSuperAdmin ?? false;
+    const badges = voteBadgeState({ votes, voteResult });
 
-    const hasExtractedVotes = votes && votes.length > 0;
+    const hasExtractedVotes = (votes && votes.length > 0) || !!voteResult;
 
     useEffect(() => {
         async function fetchVotingUtterances() {
@@ -254,11 +292,55 @@ export function VotingSection({ subjectId, votes, attendance }: VotingSectionPro
 
     const hasUtterances = utterancesBySegment.size > 0;
 
+    async function approveVotes() {
+        setApproving(true);
+        try {
+            const response = await fetch(
+                `/api/cities/${meeting.cityId}/meetings/${meeting.id}/votes`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewStatus: 'approved' }),
+                },
+            );
+            if (!response.ok) throw new Error('Failed to approve');
+            window.location.reload();
+        } catch (error) {
+            console.error('Error approving votes:', error);
+            setApproving(false);
+        }
+    }
+
     // Extracted votes: show structured breakdown, with utterances below if available
     if (hasExtractedVotes) {
         return (
             <div>
-                <VoteBreakdown votes={votes} attendance={attendance ?? []} />
+                {(badges.unreviewed || badges.inferred) && (
+                    <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
+                        {badges.unreviewed && (
+                            <Badge variant="outline" className="text-xs">
+                                {t('voteUnreviewed')}
+                            </Badge>
+                        )}
+                        {badges.inferred && (
+                            <Badge variant="secondary" className="text-xs">
+                                {t('voteInferred')}
+                            </Badge>
+                        )}
+                        {isSuperAdmin && badges.unreviewed && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={approving}
+                                onClick={approveVotes}
+                            >
+                                {approving ? <Loader2 className="h-4 w-4 animate-spin" /> : t('approveVotes')}
+                            </Button>
+                        )}
+                    </div>
+                )}
+                <VoteBreakdown votes={votes} attendance={attendance ?? []} voteResult={voteResult} />
                 {hasUtterances && (
                     <div className="border-t border-border p-4 space-y-3">
                         <p className="text-xs text-muted-foreground">

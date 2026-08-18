@@ -8,6 +8,7 @@ import { getAllCityIdsCached, getPeopleForCityCached, getPartiesForCityCached, g
 import { SubjectWithRelations } from '@/lib/db/subject';
 import { Statistics } from '@/lib/statistics';
 import { getMeetingTaskStatus, MeetingTaskStatus } from '@/lib/db/tasks';
+import { getMeetingAttendance, MeetingAttendanceRecord } from '@/lib/db/decisions';
 import { createCache } from '@/lib/cache';
 import { getRealm } from '@/lib/realm.server';
 import { Realm, SpeakerTag } from '@prisma/client';
@@ -30,6 +31,7 @@ export type MeetingDataCore = {
     speakerTags: SpeakerTag[];
     taskStatus: MeetingTaskStatus;
     transcriptHiddenForReview: boolean;
+    meetingAttendance: MeetingAttendanceRecord[];
 }
 
 export type MeetingData = MeetingDataCore & {
@@ -106,7 +108,7 @@ async function fetchMeetingDataCore(cityId: string, meetingId: string, realm: Re
     const meetingTags = { tags: ['city', `city:${cityId}`, `city:${cityId}:meetings`, `city:${cityId}:meeting:${meetingId}`] };
     const cityTags = { tags: ['city', `city:${cityId}`, `city:${cityId}:basic`] };
 
-    const [meeting, transcript, city, people, parties, subjects, taskStatus] = await Promise.all([
+    const [meeting, transcript, city, people, parties, subjects, taskStatus, meetingAttendance] = await Promise.all([
         // Meeting query is NOT cached — it calls isUserAuthorizedToEdit (uses headers())
         // to allow admins to view unreleased meetings. It's a fast PK lookup anyway.
         getCouncilMeeting(cityId, meetingId),
@@ -124,7 +126,12 @@ async function fetchMeetingDataCore(cityId: string, meetingId: string, realm: Re
             () => getMeetingTaskStatus(cityId, meetingId),
             ['city', cityId, 'meeting', meetingId, 'taskStatus'],
             meetingTags
-        )()
+        )(),
+        createCache(
+            () => getMeetingAttendance(cityId, meetingId),
+            ['city', cityId, 'meeting', meetingId, 'attendance'],
+            meetingTags
+        )(),
     ]);
 
     if (!meeting || !city || !transcript || !subjects) {
@@ -158,7 +165,8 @@ async function fetchMeetingDataCore(cityId: string, meetingId: string, realm: Re
         subjects: subjectsWithStatistics,
         speakerTags,
         taskStatus,
-        transcriptHiddenForReview
+        transcriptHiddenForReview,
+        meetingAttendance,
     };
 }
 
