@@ -1,0 +1,26 @@
+{
+  "cityId": "thompsons-station",
+  "electionDate": "2026-11-03",
+  "title": "Town of Thompson's Station Municipal Election",
+  "offices": [
+    { "id": "mayor", "label": "Mayor", "seats": 1 },
+    { "id": "alderman", "label": "Alderman", "seats": 2 }
+  ],
+  "candidates": [],
+  "dates": {
+    "qualifyingClose": "2026-08-20T12:00:00-05:00",
+    "withdrawalClose": "2026-08-27T12:00:00-05:00",
+    "registrationDeadline": "2026-10-05T16:30:00-05:00",
+    "earlyVoteStart": "2026-10-14",
+    "earlyVoteEnd": "2026-10-29",
+    "electionDay": "2026-11-03"
+  },
+  "links": [
+    { "label": "WCEC public notice — Thompson's Station", "href": "https://www.williamsoncounty-tn.gov/DocumentCenter/View/29556/Public-Notice-Thompsons-Station-November-2026" },
+    { "label": "Candidate qualifications", "href": "https://www.williamsoncounty-tn.gov/2133/Qualifications" },
+    { "label": "Petitions checklist", "href": "https://www.williamsoncounty-tn.gov/2135/Petitions-Checklist-Resources" },
+    { "label": "November 3 absentee request", "href": "https://www.williamsoncounty-tn.gov/DocumentCenter/View/29561/nov-3-2026-absentee" }
+  ],
+  "sourceNote": "Captured 2026-08-17 from WCEC public notice. Next recapture when WCEC publishes the qualified list.",
+  "lastCapturedAt": "2026-08-17"
+}
