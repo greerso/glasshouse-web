@@ -66,9 +66,9 @@ export default function Footer({ className, realm }: FooterProps) {
                             {(realm === 'us'
                                 ? [
                                     { href: "/thompsons-station", label: t("linkHome") },
-                                    { href: "/thompsons-station/votes", label: "Votes" },
                                     { href: "/thompsons-station/elections", label: "Elections" },
-                                    { href: "/search", label: t("linkSearch") },
+                                    { href: "/thompsons-station/people", label: "People" },
+                                    { href: "/thompsons-station/meetings", label: "Archive" },
                                 ]
                                 : [
                                 { href: "/", label: t("linkHome") },

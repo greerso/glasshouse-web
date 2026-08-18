@@ -229,6 +229,7 @@
         "councilMeetingsTracked": "{count, plural, =0 {Нема седница скупштине на OpenCouncil-у} one {# седница скупштине на OpenCouncil-у} few {# седнице скупштине на OpenCouncil-у} other {# седница скупштине на OpenCouncil-у}}",
         "councilMeetings": "Седнице скупштине",
         "meetingsShort": "Meetings",
+        "archive": "Archive",
         "residentTagline": "Who voted, what's on the ballot — independent of Town Hall",
         "people": "Особе",
         "elections": "Elections",

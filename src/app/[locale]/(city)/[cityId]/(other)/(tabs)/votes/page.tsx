@@ -8,7 +8,7 @@ import { getOgLocale } from '@/i18n/config';
 import { getLocalizedName } from '@/lib/formatters/name';
 import { isUserAuthorizedToEdit } from '@/lib/auth';
 import { civilDayBounds } from '@/lib/dates/civil';
-import { parseVoteFeedParams } from '@/lib/votes/params';
+import { parseVoteFeedParams, voteFeedDefaultBodyId } from '@/lib/votes/params';
 import { loadVoteFeedData, VoteWindowTooLarge } from '@/lib/db/voteFeed';
 import { chooseVotes } from '@/lib/votes/choose';
 import { paginateVoted } from '@/lib/votes/paginate';
@@ -25,6 +25,7 @@ const PAGE_SIZE = 25;
 
 export async function generateMetadata(props: {
     params: Promise<{ cityId: string; locale: string }>;
+    canonicalPath?: string;
 }): Promise<Metadata> {
     const params = await props.params;
     const t = await getTranslations({ locale: params.locale, namespace: 'metadata.votes' });
@@ -43,7 +44,9 @@ export async function generateMetadata(props: {
             siteName,
             locale: getOgLocale(params.locale),
         },
-        alternates: await buildCanonicalAlternates(`/${params.cityId}/votes`),
+        alternates: await buildCanonicalAlternates(
+            props.canonicalPath ?? `/${params.cityId}/votes`,
+        ),
     };
 }
 
@@ -92,7 +95,7 @@ export default async function Page(props: {
     if (!city) notFound();
 
     const t = await getTranslations({ locale, namespace: 'Votes' });
-    const defaultBodyId = bodies.find((body) => body.type === 'council')?.id ?? 'all';
+    const defaultBodyId = voteFeedDefaultBodyId(city.realm, bodies);
     const parsed = parseVoteFeedParams(search, defaultBodyId);
     const knownBodyIds = new Set(bodies.map((body) => body.id));
     const bodyId =

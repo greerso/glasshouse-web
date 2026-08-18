@@ -112,6 +112,32 @@ export function CityHeader({ city, councilMeetingsCount, cityMessage, hasNoData 
         }
     };
 
+    if (city.realm === 'us') {
+        return (
+            <>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p className="text-sm text-muted-foreground">{t('residentTagline')}</p>
+                    {canEdit && (
+                        <FormSheet
+                            FormComponent={CityForm}
+                            formProps={{ city, cityMessage, onSuccess: () => setIsSheetOpen(false) }}
+                            title={t('editCity')}
+                            type="edit"
+                        />
+                    )}
+                </div>
+                {shouldShowMessage && (
+                    <div className="mt-4">
+                        <CityMessageComponent
+                            message={cityMessage}
+                            className={!cityMessage.isActive && isSuperAdmin ? "opacity-75 border-dashed" : ""}
+                        />
+                    </div>
+                )}
+            </>
+        );
+    }
+
     return (
         <>
             {/* Hero Section */}

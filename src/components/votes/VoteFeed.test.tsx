@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
-import VoteFeed from './VoteFeed';
+import VoteFeed, { votedCardModel } from './VoteFeed';
 import type { VotedSubject } from '@/lib/votes/types';
 
 jest.mock('@/i18n/routing', () => ({
@@ -145,13 +145,30 @@ describe('VoteFeed', () => {
 
         expect(screen.getByText('On the agenda')).toBeInTheDocument();
         expect(screen.getByText('Awaiting minutes')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Ordinance 2026-020' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Ordinance 2026-014' })).toBeInTheDocument();
         expect(screen.getByText('2–3')).toBeInTheDocument();
+        expect(screen.getByText('Stover yes')).toBeInTheDocument();
+        expect(screen.getByText('King no')).toBeInTheDocument();
         expect(screen.queryByText(/upcoming vote/i)).toBeNull();
         expect(screen.queryByText('Consent Agenda')).toBeNull();
         expect(screen.getByRole('link', { name: 'Tax amendment' })).toHaveAttribute(
             'href',
             '/thompsons-station/june-9/subjects/tax-amendment',
         );
+        const tally = screen.getByText('2–3');
+        const agenda = screen.getByText('On the agenda');
+        expect(tally.compareDocumentPosition(agenda) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('strips agenda boilerplate from voted titles', () => {
+        expect(votedCardModel(split).title).toBe('Tax amendment');
+        expect(
+            votedCardModel({
+                ...split,
+                subjectName: 'Consideration of Ordinance 2026-014:',
+            }).title,
+        ).toBe('Ordinance 2026-014');
     });
 
     it('offers view=all when the voted list is empty', () => {

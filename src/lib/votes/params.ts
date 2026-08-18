@@ -34,6 +34,15 @@ function parsePage(raw: string | undefined): number {
     return n;
 }
 
+/** US home shows every body (Planning is where land-use happens). Greece stays council-first. */
+export function voteFeedDefaultBodyId(
+    realm: string,
+    bodies: { id: string; type: string }[],
+): string | 'all' {
+    if (realm === 'us') return 'all';
+    return bodies.find((body) => body.type === 'council')?.id ?? 'all';
+}
+
 export function parseVoteFeedParams(
     search: Record<string, string | string[] | undefined>,
     defaultBodyId: string | 'all',

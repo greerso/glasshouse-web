@@ -229,6 +229,7 @@
         "councilMeetingsTracked": "{count, plural, =0 {No council meetings on OpenCouncil} =1 {1 council meeting on OpenCouncil} other {# council meetings on OpenCouncil}}",
         "councilMeetings": "Council Meetings",
         "meetingsShort": "Meetings",
+        "archive": "Archive",
         "residentTagline": "Who voted, what's on the ballot — independent of Town Hall",
         "people": "People",
         "elections": "Elections",
@@ -1231,7 +1232,7 @@
         "sourceHeading": "Source"
     },
     "Votes": {
-        "title": "Votes",
+        "title": "How they voted",
         "onTheAgenda": "On the agenda",
         "awaitingMinutes": "Awaiting minutes",
         "olderAwaiting": "{count} older meetings awaiting minutes",

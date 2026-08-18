@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { CityHeader } from "@/components/cities/CityHeader";
 import { CityNavigation } from "@/components/cities/CityNavigation";
-import { CityResidentIntro } from "@/components/cities/CityResidentIntro";
 import { getCityCached, getCityMessageCached, getPartiesForCityCached, getPeopleForCityCached } from "@/lib/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { getNotificationPreferenceForCity } from "@/lib/db/notifications";
@@ -43,9 +42,11 @@ export default async function TabsLayout(
         ? !!(await getNotificationPreferenceForCity(currentUser.id, cityId))
         : false;
 
+    const us = city.realm === 'us';
+
     return (
-        <div className="relative md:container md:mx-auto py-8 px-4 md:px-8 space-y-8 z-0">
-            <div className="space-y-8">
+        <div className={`relative md:container md:mx-auto px-4 md:px-8 z-0 ${us ? 'py-6 space-y-6' : 'py-8 space-y-8'}`}>
+            <div className={us ? 'space-y-5' : 'space-y-8'}>
                 <CityHeader
                     city={city}
                     councilMeetingsCount={city._count.councilMeetings}
@@ -54,9 +55,7 @@ export default async function TabsLayout(
                     hasNotifications={hasNotifications}
                 />
 
-                <CityResidentIntro cityId={cityId} realm={city.realm} />
-
-                <CityNavigation cityId={cityId} city={city} showParties={parties.length > 0} />
+                <CityNavigation cityId={cityId} city={city} showParties={!us && parties.length > 0} />
 
                 <Suspense fallback={
                     <div className="flex justify-center items-center h-32">

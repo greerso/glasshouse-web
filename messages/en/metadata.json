@@ -41,10 +41,10 @@
     "ogAlt": "Elections | {cityName}"
   },
   "votes": {
-    "shortTitle": "Votes | {cityName}",
+    "shortTitle": "How they voted | {cityName}",
     "notFoundTitle": "Votes | {cityName}",
     "notFoundDescription": "Votes are not available.",
-    "description": "Recorded votes and posted agendas for {cityName}.",
-    "ogAlt": "Votes | {cityName}"
+    "description": "Named roll-call votes, splits, and posted agendas for {cityName}.",
+    "ogAlt": "How they voted | {cityName}"
   }
 }

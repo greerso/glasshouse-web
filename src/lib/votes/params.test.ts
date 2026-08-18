@@ -1,4 +1,4 @@
-import { parseVoteFeedParams } from './params';
+import { parseVoteFeedParams, voteFeedDefaultBodyId } from './params';
 
 const DEFAULT_BODY = 'thompsons-station-boma';
 
@@ -61,5 +61,20 @@ describe('parseVoteFeedParams', () => {
     it('reads the first value when a param is an array', () => {
         expect(parse({ tab: ['agreement'] }).tab).toBe('agreement');
         expect(parse({ view: ['named', 'all'] }).view).toBe('named');
+    });
+});
+
+describe('voteFeedDefaultBodyId', () => {
+    const bodies = [
+        { id: 'planning', type: 'committee' },
+        { id: 'boma', type: 'council' },
+    ];
+
+    it('defaults US to all bodies', () => {
+        expect(voteFeedDefaultBodyId('us', bodies)).toBe('all');
+    });
+
+    it('defaults other realms to the council body', () => {
+        expect(voteFeedDefaultBodyId('greece', bodies)).toBe('boma');
     });
 });

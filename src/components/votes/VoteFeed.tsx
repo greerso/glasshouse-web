@@ -1,8 +1,8 @@
 import { Link } from '@/i18n/routing';
 import { formatDate } from '@/lib/formatters/time';
-import { formatSurnameFirst } from '@/lib/formatters/name';
 import { calculateVoteResult } from '@/lib/utils/votes';
 import { chooseVotes } from '@/lib/votes/choose';
+import { plainSubjectName, surnameOf } from '@/lib/votes/display';
 import type { ChosenVote, VotedSubject } from '@/lib/votes/types';
 import { Badge } from '@/components/ui/badge';
 
@@ -52,7 +52,8 @@ function tallyFromChosen(chosen: ChosenVote[]): { yay: number; nay: number; abst
 export function votedCardModel(subject: VotedSubject): {
     tally: string;
     outcome: 'PASSED' | 'FAILED';
-    namedLine: string;
+    title: string;
+    names: { personId: string; label: string; voteType: ChosenVote['voteType'] }[];
     unreviewed: boolean;
     inferred: boolean;
 } {
@@ -72,9 +73,12 @@ export function votedCardModel(subject: VotedSubject): {
     return {
         tally: formatVoteTally(counts.yay, counts.nay, counts.abstain),
         outcome,
-        namedLine: chosen
-            .map((vote) => `${formatSurnameFirst(vote.personName)} ${vote.voteType}`)
-            .join(' · '),
+        title: plainSubjectName(subject.subjectName),
+        names: chosen.map((vote) => ({
+            personId: vote.personId,
+            label: surnameOf(vote.personName),
+            voteType: vote.voteType,
+        })),
         unreviewed:
             chosen.some((vote) => vote.reviewStatus === 'unreviewed') ||
             subject.result?.reviewStatus === 'unreviewed',
@@ -120,33 +124,52 @@ export function VotedSubjectCard({
 }) {
     const model = votedCardModel(subject);
     return (
-        <article className="space-y-2 rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">
-                {formatDate(subject.meetingDateTime, timezone, locale)}
-                {' · '}
-                {subject.bodyName}
-            </p>
-            <h3 className="text-lg font-medium">
-                <Link
-                    href={subjectHref(cityId, subject.meetingId, subject.subjectId)}
-                    className="underline-offset-4 hover:underline"
-                >
-                    {subject.subjectName}
-                </Link>
-            </h3>
-            <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold tabular-nums">{model.tally}</span>
-                <Badge variant={model.outcome === 'FAILED' ? 'destructive' : 'secondary'}>
+        <article className="grid gap-3 border-b py-6 last:border-b-0 sm:grid-cols-[7rem_1fr] sm:gap-6">
+            <div className="sm:pt-1">
+                <p className="text-3xl font-semibold tabular-nums tracking-tight">{model.tally}</p>
+                <p className={`text-sm font-medium ${model.outcome === 'FAILED' ? 'text-destructive' : 'text-foreground'}`}>
                     {model.outcome === 'PASSED' ? strings.passed : strings.failed}
-                </Badge>
-                {model.unreviewed && (
-                    <Badge variant="outline">{strings.unreviewed}</Badge>
-                )}
-                {model.inferred && <Badge variant="outline">{strings.inferred}</Badge>}
+                </p>
             </div>
-            {model.namedLine ? (
-                <p className="text-sm text-muted-foreground">{model.namedLine}</p>
-            ) : null}
+            <div className="space-y-2 min-w-0">
+                <p className="text-sm text-muted-foreground">
+                    {formatDate(subject.meetingDateTime, timezone, locale)}
+                    {' · '}
+                    {subject.bodyName}
+                </p>
+                <h3 className="text-xl font-semibold leading-snug">
+                    <Link
+                        href={subjectHref(cityId, subject.meetingId, subject.subjectId)}
+                        className="hover:underline underline-offset-4"
+                    >
+                        {model.title}
+                    </Link>
+                </h3>
+                {model.names.length > 0 ? (
+                    <ul className="flex flex-wrap gap-2">
+                        {model.names.map((name) => (
+                            <li
+                                key={name.personId}
+                                className={`rounded-full border px-2.5 py-0.5 text-sm ${
+                                    name.voteType === 'FOR'
+                                        ? 'border-emerald-700/30 bg-emerald-50 text-emerald-900'
+                                        : name.voteType === 'AGAINST'
+                                          ? 'border-red-700/30 bg-red-50 text-red-900'
+                                          : 'border-border bg-muted text-muted-foreground'
+                                }`}
+                            >
+                                {name.label} {name.voteType === 'FOR' ? 'yes' : name.voteType === 'AGAINST' ? 'no' : name.voteType.toLowerCase()}
+                            </li>
+                        ))}
+                    </ul>
+                ) : null}
+                <div className="flex flex-wrap gap-2">
+                    {model.unreviewed && (
+                        <Badge variant="outline">{strings.unreviewed}</Badge>
+                    )}
+                    {model.inferred && <Badge variant="outline">{strings.inferred}</Badge>}
+                </div>
+            </div>
         </article>
     );
 }
@@ -184,7 +207,7 @@ function UnvotedSection({
                                     href={subjectHref(cityId, item.meetingId, item.subjectId)}
                                     className="underline-offset-4 hover:underline"
                                 >
-                                    {item.subjectName}
+                                    {plainSubjectName(item.subjectName)}
                                 </Link>
                             </li>
                         ))}
@@ -221,21 +244,6 @@ export default function VoteFeed({
 }) {
     return (
         <div className="space-y-8">
-            <UnvotedSection
-                heading={strings.onTheAgenda}
-                items={upcoming}
-                cityId={cityId}
-                timezone={timezone}
-                locale={locale}
-            />
-            <UnvotedSection
-                heading={strings.awaitingMinutes}
-                items={awaiting}
-                cityId={cityId}
-                timezone={timezone}
-                locale={locale}
-                footer={strings.olderAwaiting}
-            />
             {votedTotal === 0 ? (
                 <div className="space-y-2">
                     <p>{strings.noVotes}</p>
@@ -279,6 +287,21 @@ export default function VoteFeed({
                     ) : null}
                 </section>
             )}
+            <UnvotedSection
+                heading={strings.awaitingMinutes}
+                items={awaiting}
+                cityId={cityId}
+                timezone={timezone}
+                locale={locale}
+                footer={strings.olderAwaiting}
+            />
+            <UnvotedSection
+                heading={strings.onTheAgenda}
+                items={upcoming}
+                cityId={cityId}
+                timezone={timezone}
+                locale={locale}
+            />
         </div>
     );
 }

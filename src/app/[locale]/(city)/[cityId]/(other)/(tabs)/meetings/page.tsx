@@ -8,7 +8,6 @@ import { getLocalizedName } from "@/lib/formatters/name";
 import { getOgLocale } from '@/i18n/config';
 import { getTranslations } from 'next-intl/server';
 import { siteBranding } from '@/lib/siteBranding';
-import VotesPage, { generateMetadata as generateVotesMetadata } from './votes/page';
 
 export async function generateMetadata(
     props: {
@@ -16,23 +15,15 @@ export async function generateMetadata(
     }
 ): Promise<Metadata> {
     const params = await props.params;
-
-    const {
-        cityId,
-        locale
-    } = params;
-
+    const { cityId, locale } = params;
     const city = await getCityCached(cityId);
-    if (city?.realm === 'us') {
-        return generateVotesMetadata({ ...props, canonicalPath: `/${cityId}` });
-    }
     const t = await getTranslations({ locale, namespace: 'metadata.city' });
 
     if (!city) {
         return {
             title: t('notFoundTitle'),
             description: t('notFoundDescription'),
-            alternates: await buildCanonicalAlternates(`/${cityId}`),
+            alternates: await buildCanonicalAlternates(`/${cityId}/meetings`),
         };
     }
 
@@ -51,14 +42,7 @@ export async function generateMetadata(
             description,
             type: "website",
             siteName,
-            images: [
-                {
-                    url: ogImageUrl,
-                    width: 1200,
-                    height: 630,
-                    alt: t('ogAlt', { cityName }),
-                },
-            ],
+            images: [{ url: ogImageUrl, width: 1200, height: 630, alt: t('ogAlt', { cityName }) }],
             locale: getOgLocale(locale),
         },
         twitter: {
@@ -67,27 +51,19 @@ export async function generateMetadata(
             description,
             images: [ogImageUrl],
         },
-        alternates: await buildCanonicalAlternates(`/${cityId}`),
+        alternates: await buildCanonicalAlternates(`/${cityId}/meetings`),
     };
 }
 
-export default async function CityHomePage(
+export default async function MeetingsArchivePage(
     props: {
-        params: Promise<{ cityId: string; locale?: string }>;
-        searchParams: Promise<Record<string, string | string[] | undefined>>;
+        params: Promise<{ cityId: string }>;
+        searchParams: Promise<{ page?: string }>;
     }
 ) {
-    const params = await props.params;
-    const { cityId } = params;
-    const homeCity = await getCityCached(cityId);
-    if (homeCity?.realm === 'us') {
-        return VotesPage(props as Parameters<typeof VotesPage>[0]);
-    }
-
     const searchParams = await props.searchParams;
-
-    const pageRaw = searchParams.page;
-    const pageNumber = parseInt((Array.isArray(pageRaw) ? pageRaw[0] : pageRaw) || '1', 10);
+    const { cityId } = await props.params;
+    const pageNumber = parseInt(searchParams.page || '1', 10);
     const currentPage = isNaN(pageNumber) || pageNumber < 1 ? 1 : pageNumber;
     const pageSize = 12;
 
@@ -112,4 +88,4 @@ export default async function CityHomePage(
             pageSize={pageSize}
         />
     );
-} 
+}
