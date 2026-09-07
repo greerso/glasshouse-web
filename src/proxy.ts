@@ -161,9 +161,9 @@ export default async function proxy(req: NextRequest) {
     // on the realm domain. The [locale] layout calls setRequestLocale, so
     // messages load without next-intl's middleware running for these requests.
     // Only applies when the path has no explicit locale prefix, so an explicit
-    // /en (or /lat on .rs) is still respected. Unknown hosts (localhost)
-    // resolve to greece, whose default is the app default — dev is unaffected
-    // unless a realm override cookie says otherwise.
+    // /en (or /lat on .rs) is still respected. Unknown hosts (localhost, and
+    // any staging host not in REALMS) resolve to `us`, whose default is the
+    // app default — dev is unaffected unless a realm override cookie says so.
     const realmDefaultLocale = REALMS[realm].defaultLocale;
     if (
         realmDefaultLocale !== routing.defaultLocale &&
