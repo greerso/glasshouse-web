@@ -7,7 +7,7 @@ import BrowserFrame from './BrowserFrame'
 import ShineTitle from './ShineTitle'
 import type { AboutPageStats } from '@/lib/db/cities'
 import type { Realm } from '@prisma/client'
-import { getRealmContactPhone, getRealmDomain, telHref } from '@/lib/realm'
+import { getRealmContactPhone, getRealmDomain, OFFICE_PHONE, telHref } from '@/lib/realm'
 
 interface HeroProps {
     onContactClick: () => void
@@ -18,7 +18,9 @@ interface HeroProps {
 export default function Hero({ onContactClick, stats, realm }: HeroProps) {
     const t = useTranslations('about.hero')
     const domain = getRealmDomain(realm)
-    const contactPhone = getRealmContactPhone(realm)
+    // OpenCouncil's own page, so it prints the office line on a realm that
+    // publishes no number of its own.
+    const contactPhone = getRealmContactPhone(realm) ?? OFFICE_PHONE
 
     const counters = [
         { value: stats?.municipalityCount ?? 10, label: t('counters.municipalities') },

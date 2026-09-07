@@ -13,7 +13,7 @@ import { SiX, SiInstagram, SiFacebook, SiGithub, SiDiscord, SiSubstack } from 'r
 import { REOPEN_CONSENT_EVENT } from "@/lib/utils/analyticsConsent";
 import { hasExplainPage } from "@/lib/explain/availability";
 import { Realm } from "@prisma/client";
-import { getRealmContactPhone, telHref } from "@/lib/realm";
+import { getRealmContactEmail, getRealmContactPhone, telHref } from "@/lib/realm";
 
 interface FooterProps {
     className?: string;
@@ -29,6 +29,7 @@ interface FooterProps {
 export default function Footer({ className, realm }: FooterProps) {
     const t = useTranslations("Footer")
     const contactPhone = getRealmContactPhone(realm)
+    const contactEmail = getRealmContactEmail(realm)
     return (
         <footer className={cn("w-full bg-muted border-t print:hidden", className)}>
             <div className="container mx-auto px-4 py-12">
@@ -119,23 +120,35 @@ export default function Footer({ className, realm }: FooterProps) {
                     </div>
                     <div className="flex flex-col items-center md:items-start space-y-4">
                         <h3 className="font-semibold text-foreground text-base">{t("contact")}</h3>
-                        <a
-                            href={telHref(contactPhone)}
-                            className="flex items-center text-xs text-muted-foreground hover:text-primary transition-colors"
-                        >
-                            <Phone className="w-4 h-4 mr-2" />
-                            {contactPhone}
-                        </a>
-                        <a
-                            href="mailto:hello@opencouncil.gr"
-                            className="flex items-center text-xs text-muted-foreground hover:text-primary transition-colors"
-                        >
-                            <Mail className="w-4 h-4 mr-2" />
-                            hello@opencouncil.gr
-                        </a>
+                        {contactPhone && (
+                            <a
+                                href={telHref(contactPhone)}
+                                className="flex items-center text-xs text-muted-foreground hover:text-primary transition-colors"
+                            >
+                                <Phone className="w-4 h-4 mr-2" />
+                                {contactPhone}
+                            </a>
+                        )}
+                        {contactEmail && (
+                            <a
+                                href={`mailto:${contactEmail}`}
+                                className="flex items-center text-xs text-muted-foreground hover:text-primary transition-colors"
+                            >
+                                <Mail className="w-4 h-4 mr-2" />
+                                {contactEmail}
+                            </a>
+                        )}
                         <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
                             <TooltipProvider>
-                                {[
+                                {(realm === 'us'
+                                    // Glasshouse has no social accounts of its own, and the
+                                    // rest of this list is OpenCouncil's and Schema Labs'.
+                                    // GitHub is ours and stays — it is where the AGPL source
+                                    // link in this same footer points.
+                                    ? [
+                                        { href: "https://github.com/greerso/glasshouse-web", icon: SiGithub, label: "GitHub: glasshouse-web" },
+                                    ]
+                                    : [
                                     { href: "https://twitter.com/opencouncil_gr", icon: SiX, label: "X (Twitter): @opencouncil_gr" },
                                     { href: "https://instagram.com/opencouncil_gr", icon: SiInstagram, label: "Instagram: @opencouncil_gr" },
                                     { href: "https://github.com/greerso/glasshouse-web", icon: SiGithub, label: "GitHub: glasshouse-web" },
@@ -146,7 +159,7 @@ export default function Footer({ className, realm }: FooterProps) {
                                         label: "Facebook: OpenCouncil",
                                     },
                                     { href: "https://schemalabs.substack.com", icon: SiSubstack, label: "Substack" },
-                                ].map((social) => (
+                                ]).map((social) => (
                                     <Tooltip key={social.href}>
                                         <TooltipTrigger asChild>
                                             <a

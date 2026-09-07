@@ -1,6 +1,6 @@
 import type { Realm } from '@prisma/client';
 import { REOPEN_CONSENT_EVENT } from '@/lib/utils/analyticsConsent';
-import { getRealmContactPhone, telHref } from '@/lib/realm';
+import { getRealmContactEmail, getRealmContactPhone, OFFICE_EMAIL, OFFICE_PHONE, telHref } from '@/lib/realm';
 
 /* Footer-style link groups surfaced in the desktop "Περισσότερα" popover and the mobile
    drawer accordions. Mirrors the site footer (src/components/layout/Footer.tsx). */
@@ -56,13 +56,16 @@ const STATIC_GROUPS: FooterGroup[] = [
  * that array is a module constant and the number is not known until render.
  */
 export function contactGroup(realm: Realm): FooterGroup {
-    const phone = getRealmContactPhone(realm);
+    // OpenCouncil's own landing menu, so it prints the office details on a realm
+    // that publishes none of its own.
+    const phone = getRealmContactPhone(realm) ?? OFFICE_PHONE;
+    const email = getRealmContactEmail(realm) ?? OFFICE_EMAIL;
     return {
         title: 'Επικοινωνία',
         titleKey: 'footer.groups.contact',
         links: [
             { label: phone, href: telHref(phone), icon: 'phone' },
-            { label: 'hello@opencouncil.gr', href: 'mailto:hello@opencouncil.gr', icon: 'mail' },
+            { label: email, href: `mailto:${email}`, icon: 'mail' },
         ],
     };
 }

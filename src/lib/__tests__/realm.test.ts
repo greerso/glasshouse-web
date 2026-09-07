@@ -219,17 +219,19 @@ describe('getRealmDefaultMapView', () => {
 describe('getRealmContactPhone', () => {
     // Compared as one map rather than realm by realm: a new realm then has to be
     // added to this expectation, which is where someone confirms that sharing the
-    // Athens line was deliberate. The `satisfies` clause on REALMS already makes a
-    // missing number a compile error, and ts-jest runs isolatedModules, so a
-    // per-realm "has some digits" loop would pass against a realm that quietly
-    // inherited the wrong number.
+    // Athens line was deliberate. ts-jest runs isolatedModules, so a per-realm
+    // "has some digits" loop would pass against a realm that quietly inherited the
+    // wrong number — and `undefined` is a deliberate value here, not a gap, so it
+    // has to be asserted just as explicitly.
     it('pairs every realm with its number, so a new one cannot quietly inherit the Athens line', () => {
         expect(Object.fromEntries(ALL_REALMS.map((r) => [r, getRealmContactPhone(r)]))).toEqual({
             greece: '+30 211 198 0212',
             france: '+30 211 198 0212',
             cyprus: '+30 211 198 0212',
             serbia: '0800 301167',
-            us: 'hello@glasshouse.town',
+            // us publishes no number; the UI omits the contact block rather than
+            // printing an address at the unregistered glasshouse.town.
+            us: undefined,
         });
     });
 });

@@ -1,14 +1,14 @@
 "use client"
 import { useTranslations } from 'next-intl'
 import { useRealm } from '@/hooks/useRealm'
-import { getRealmContactPhone, telHref } from '@/lib/realm'
+import RealmContactCard from '@/components/layout/RealmContactCard'
 import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
-import { Home, Search, ArrowLeft, Phone, Mail } from 'lucide-react'
+import { Home, Search, ArrowLeft } from 'lucide-react'
 
 export default function NotFound() {
     const t = useTranslations('NotFoundPage')
-    const contactPhone = getRealmContactPhone(useRealm())
+    const realm = useRealm()
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-background">
@@ -62,28 +62,11 @@ export default function NotFound() {
                 </div>
 
                 {/* Additional Help */}
-                <div className="mt-12 p-6 bg-muted/50 rounded-lg border border-border">
-                    <h3 className="text-lg font-medium mb-4">{t('helpTitle')}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                        {t('helpDescription')}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a
-                            href={telHref(contactPhone)}
-                            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <Phone className="w-4 h-4 mr-2" />
-                            {contactPhone}
-                        </a>
-                        <a
-                            href="mailto:hello@opencouncil.gr"
-                            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <Mail className="w-4 h-4 mr-2" />
-                            hello@opencouncil.gr
-                        </a>
-                    </div>
-                </div>
+                <RealmContactCard
+                    realm={realm}
+                    title={t('helpTitle')}
+                    description={t('helpDescription')}
+                />
             </div>
         </div>
     )

@@ -4,8 +4,20 @@ import type { Country } from '@/lib/apiTypes';
 /**
  * The Athens office line — the number every realm shows unless it has one of its
  * own. Written the way it should be displayed; `telHref` derives the dialable form.
+ *
+ * Exported because a handful of surfaces are OpenCouncil's own documents rather
+ * than realm-neutral chrome — the brochure, /explain, the landing footer menu —
+ * and their Greek copy reads "call us on …", so they print these rather than
+ * omitting the line on a realm that publishes no channel of its own.
  */
-const OFFICE_PHONE = '+30 211 198 0212';
+export const OFFICE_PHONE = '+30 211 198 0212';
+
+/**
+ * The OpenCouncil inbox — likewise the default for every realm Schema Labs
+ * runs. A realm that is not one of theirs has no business advertising it, so
+ * this is per-realm rather than a hardcoded fallback in the components.
+ */
+export const OFFICE_EMAIL = 'hello@opencouncil.gr';
 
 /**
  * Realm (tenant) configuration. A single deployment serves all domains off one
@@ -22,9 +34,9 @@ const OFFICE_PHONE = '+30 211 198 0212';
  * (`proxy.ts`). The request-scoped resolver lives in `realm.server.ts`.
  */
 export const REALMS = {
-    greece: { domain: 'opencouncil.gr', defaultLocale: 'el', country: 'GR', contactPhone: OFFICE_PHONE },
-    france: { domain: 'opencouncil.fr', defaultLocale: 'fr', country: 'FR', contactPhone: OFFICE_PHONE },
-    cyprus: { domain: 'opencouncil.cy', defaultLocale: 'el', country: 'CY', contactPhone: OFFICE_PHONE },
+    greece: { domain: 'opencouncil.gr', defaultLocale: 'el', country: 'GR', contactPhone: OFFICE_PHONE, contactEmail: OFFICE_EMAIL },
+    france: { domain: 'opencouncil.fr', defaultLocale: 'fr', country: 'FR', contactPhone: OFFICE_PHONE, contactEmail: OFFICE_EMAIL },
+    cyprus: { domain: 'opencouncil.cy', defaultLocale: 'el', country: 'CY', contactPhone: OFFICE_PHONE, contactEmail: OFFICE_EMAIL },
     // Serbian is digraphic: `sr` (Cyrillic) is the default, `sr-Latn` is the
     // realm-exclusive Latin variant reachable via the script switcher.
     // The Serbian number is a domestic toll-free line, so it is shown and
@@ -35,14 +47,20 @@ export const REALMS = {
         extraLocales: ['sr-Latn'],
         country: 'RS',
         contactPhone: '0800 301167',
+        contactEmail: OFFICE_EMAIL,
     },
     us: {
         domain: process.env.NEXT_PUBLIC_REALM_DOMAIN ?? 'glasshouse.town',
         defaultLocale: 'en',
         country: 'US',
-        // Phase 0: no office line yet for the US deployment — placeholder
-        // contact email until real content lands.
-        contactPhone: 'hello@glasshouse.town',
+        // No published contact channel yet, so the UI omits the whole contact
+        // block. It previously carried an address at the unregistered
+        // glasshouse.town in `contactPhone`, which rendered as a `tel:` link —
+        // worse than showing nothing. Both keys are spelled out as `undefined`
+        // rather than omitted: `REALMS` is `as const`, so a missing key would
+        // make `REALMS[realm].contactPhone` an error on the realm union.
+        contactPhone: undefined,
+        contactEmail: undefined,
     },
 } as const satisfies Record<
     Realm,
@@ -51,7 +69,10 @@ export const REALMS = {
         defaultLocale: 'el' | 'fr' | 'sr' | 'en';
         country: Country;
         extraLocales?: readonly string[];
-        contactPhone: string;
+        // Optional: a realm with no published channel omits it, and callers
+        // render nothing rather than inventing one.
+        contactPhone?: string;
+        contactEmail?: string;
     }
 >;
 
@@ -272,8 +293,15 @@ export function getRealmDefaultMapView(realm: Realm): { center: [number, number]
  * The phone number to show visitors of a realm, formatted for display. Serbia
  * has its own toll-free line; the rest share the Athens office number.
  */
-export function getRealmContactPhone(realm: Realm): string {
+export function getRealmContactPhone(realm: Realm): string | undefined {
     return REALMS[realm].contactPhone;
+}
+
+/**
+ * Contact email for a realm, or `undefined` where none is published yet.
+ */
+export function getRealmContactEmail(realm: Realm): string | undefined {
+    return REALMS[realm].contactEmail;
 }
 
 /**
