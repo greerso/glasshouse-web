@@ -30,12 +30,23 @@ ARG USE_LOCAL_DB=true
 # source link in Footer. Also copied to SOURCE_COMMIT so generateBuildId
 # puts the SHA in `/_next/static/<sha>/` on every page, including `/`.
 ARG NEXT_PUBLIC_BUILD_COMMIT_SHA
+# The `us` realm's canonical domain (REALMS.us in src/lib/realm.ts), inlined
+# into the client bundle at `next build`. Staging deployments pass their own
+# host so canonical/hreflang, the sitemap, notification links and the country
+# switcher point somewhere that resolves.
+#
+# The default is load-bearing: an unset ARG bakes an empty string, and
+# `process.env.NEXT_PUBLIC_REALM_DOMAIN ?? 'glasshouse.town'` does not catch
+# `''` — the realm's base URL would become `https://` and isKnownRealmHost
+# would stop recognising any host of ours (magic links, SEO redirects).
+ARG NEXT_PUBLIC_REALM_DOMAIN=glasshouse.town
 
 # Set environment variables
 ENV USE_LOCAL_DB=${USE_LOCAL_DB}
 ENV APP_ENV=production
 ENV NEXT_PUBLIC_BUILD_COMMIT_SHA=${NEXT_PUBLIC_BUILD_COMMIT_SHA}
 ENV SOURCE_COMMIT=${NEXT_PUBLIC_BUILD_COMMIT_SHA}
+ENV NEXT_PUBLIC_REALM_DOMAIN=${NEXT_PUBLIC_REALM_DOMAIN}
 
 # Copy the rest of the application code
 COPY . .

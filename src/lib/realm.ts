@@ -134,7 +134,7 @@ export function realmForHost(host: string | null | undefined): Realm {
  * Whether a Host header value is one of our own domains (apex or subdomain of a
  * realm domain — so production and preview hosts match, but `localhost` and any
  * attacker-supplied host do not). Unlike `realmForHost` (which defaults unknown
- * hosts to `greece`), this is a strict membership check — use it before trusting
+ * hosts to `us`), this is a strict membership check — use it before trusting
  * a request's Host for anything sensitive, e.g. building a magic-link URL.
  */
 export function isKnownRealmHost(host: string | null | undefined): boolean {
