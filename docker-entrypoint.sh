@@ -53,8 +53,8 @@ if [ "$APP_ENV" = "production" ]; then
   if [ "$USE_LOCAL_DB" = "true" ]; then
     echo "🗄️  Database running on port $DB_PORT"
   fi
-  echo "🏗️ Building and starting production server on port $APP_PORT..."
-  npm run production:build
+  echo "🚀 Starting production server on port $APP_PORT..."
+  # The build is baked into the image (see Dockerfile); this only starts it.
   npx next start -p $APP_PORT
 else
   if [ "$USE_LOCAL_DB" = "true" ]; then

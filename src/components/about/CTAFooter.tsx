@@ -6,7 +6,7 @@ import { PhoneCall, CalendarClock } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import type { Realm } from '@prisma/client'
-import { getRealmContactPhone, telHref } from '@/lib/realm'
+import { getRealmContactPhone, OFFICE_PHONE, telHref } from '@/lib/realm'
 
 interface CTAFooterProps {
     onContactClick: () => void
@@ -15,7 +15,9 @@ interface CTAFooterProps {
 
 export default function CTAFooter({ onContactClick, realm }: CTAFooterProps) {
     const t = useTranslations('about.cta')
-    const contactPhone = getRealmContactPhone(realm)
+    // OpenCouncil's own page, so it prints the office line on a realm that
+    // publishes no number of its own.
+    const contactPhone = getRealmContactPhone(realm) ?? OFFICE_PHONE
     const glowRef = useRef<HTMLDivElement>(null)
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {

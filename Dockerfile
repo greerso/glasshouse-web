@@ -26,7 +26,7 @@ FROM base
 
 # Accept build argument to toggle database commands
 ARG USE_LOCAL_DB=true
-# Inlined into the client bundle at `next build` (entrypoint) for the AGPL
+# Inlined into the client bundle at `next build` (below) for the AGPL
 # source link in Footer. Also copied to SOURCE_COMMIT so generateBuildId
 # puts the SHA in `/_next/static/<sha>/` on every page, including `/`.
 ARG NEXT_PUBLIC_BUILD_COMMIT_SHA
@@ -50,6 +50,28 @@ ENV NEXT_PUBLIC_REALM_DOMAIN=${NEXT_PUBLIC_REALM_DOMAIN}
 
 # Copy the rest of the application code
 COPY . .
+
+# Build here, not at container start. The entrypoint used to run
+# `production:build`, which cost a multi-minute public outage on every
+# container recreation and — because the build then ran with the service's
+# runtime env — let a stale runtime `NEXT_PUBLIC_*` shadow the build arg above.
+#
+# SKIP_ENV_VALIDATION is set per-command rather than as an image `ENV`: the
+# server schema in src/env.mjs describes runtime requirements the build does
+# not have (no database, no credentials), but the running container must still
+# be validated against it. The nix build (flake.nix) skips it the same way.
+# The placeholder values mirror flake.nix's preBuild, which is the project's
+# existing DB-free build contract. They are needed because a few modules
+# construct clients at import time — `new Client({ node: env.ELASTICSEARCH_URL })`
+# in the admin elasticsearch route and src/lib/search — so page-data collection
+# throws on an unset URL even though those routes are `force-dynamic`. Nothing
+# is contacted during the build; the values only have to parse.
+RUN npx prisma generate \
+    && SKIP_ENV_VALIDATION=1 \
+       SKIP_FULL_SITEMAP=true \
+       ELASTICSEARCH_URL=http://localhost:9200 \
+       ELASTICSEARCH_API_KEY=dummy \
+       npm run production:build
 
 # Prepare start script
 COPY docker-entrypoint.sh /usr/local/bin/
