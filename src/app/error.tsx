@@ -51,17 +51,20 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                     </Button>
                 </div>
 
+                {/* The digest is the only handle a user has on a specific 500, and it
+                    must survive on a realm that publishes no contact channel — so it
+                    renders outside RealmContactCard, which returns null there. */}
+                {error.digest && (
+                    <p className="mt-12 text-sm text-muted-foreground">
+                        Κωδικός σφάλματος:{' '}
+                        <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">{error.digest}</code>
+                    </p>
+                )}
+
                 <RealmContactCard
                     realm={realm}
                     title="Χρειάζεστε βοήθεια;"
-                    description={
-                        <>
-                            Αν το πρόβλημα επιμένει, επικοινωνήστε μαζί μας
-                            {error.digest ? (
-                                <> και αναφέρετε τον κωδικό: <code className="text-xs font-mono bg-background px-1.5 py-0.5 rounded">{error.digest}</code></>
-                            ) : '.'}
-                        </>
-                    }
+                    description="Αν το πρόβλημα επιμένει, επικοινωνήστε μαζί μας — αναφέρετε τον κωδικό σφάλματος παραπάνω."
                 />
             </div>
         </div>

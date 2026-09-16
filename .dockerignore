@@ -3,3 +3,10 @@ node_modules
 **/node_modules
 .next
 services/*/.next
+# `next build` runs inside the image now, so anything in the build context that
+# Next loads at build time reaches the bundle. A stray .env would have its
+# NEXT_PUBLIC_* inlined — silently overriding the build args that are supposed
+# to be the only source for them — and would ship in an image layer besides.
+.env
+.env.*
+!.env.example
