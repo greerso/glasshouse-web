@@ -40,6 +40,17 @@ ARG NEXT_PUBLIC_BUILD_COMMIT_SHA
 # `''` — the realm's base URL would become `https://` and isKnownRealmHost
 # would stop recognising any host of ours (magic links, SEO redirects).
 ARG NEXT_PUBLIC_REALM_DOMAIN=glasshouse.town
+# The remaining client-side vars. Next inlines every NEXT_PUBLIC_* at build
+# time — into the server bundle as well as the client one — so once the build
+# lives in the image these are the only way to set them, and a value in the
+# service env store is inert. flake.nix passes the same set for the same
+# reason. All four are optional in src/env.mjs, so an unset ARG disables the
+# feature rather than breaking the build: no Mapbox token means the map renders
+# its fallback, no PostHog token disables analytics entirely.
+ARG NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+ARG NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN
+ARG NEXT_PUBLIC_CONTACT_EMAIL
+ARG NEXT_PUBLIC_CONTACT_ADDRESS
 
 # Set environment variables
 ENV USE_LOCAL_DB=${USE_LOCAL_DB}
@@ -47,6 +58,10 @@ ENV APP_ENV=production
 ENV NEXT_PUBLIC_BUILD_COMMIT_SHA=${NEXT_PUBLIC_BUILD_COMMIT_SHA}
 ENV SOURCE_COMMIT=${NEXT_PUBLIC_BUILD_COMMIT_SHA}
 ENV NEXT_PUBLIC_REALM_DOMAIN=${NEXT_PUBLIC_REALM_DOMAIN}
+ENV NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+ENV NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=${NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}
+ENV NEXT_PUBLIC_CONTACT_EMAIL=${NEXT_PUBLIC_CONTACT_EMAIL}
+ENV NEXT_PUBLIC_CONTACT_ADDRESS=${NEXT_PUBLIC_CONTACT_ADDRESS}
 
 # Copy the rest of the application code
 COPY . .

@@ -224,7 +224,10 @@ describe('getRealmContactPhone', () => {
     // wrong number — and `undefined` is a deliberate value here, not a gap, so it
     // has to be asserted just as explicitly.
     it('pairs every realm with its number, so a new one cannot quietly inherit the Athens line', () => {
-        expect(Object.fromEntries(ALL_REALMS.map((r) => [r, getRealmContactPhone(r)]))).toEqual({
+        // toStrictEqual, not toEqual: toEqual treats an `undefined` value as an
+        // absent key, so a newly added realm that resolves to undefined would slip
+        // through the very check this test exists to be.
+        expect(Object.fromEntries(ALL_REALMS.map((r) => [r, getRealmContactPhone(r)]))).toStrictEqual({
             greece: '+30 211 198 0212',
             france: '+30 211 198 0212',
             cyprus: '+30 211 198 0212',
