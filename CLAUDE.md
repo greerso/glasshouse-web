@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Glasshouse** is a Magnolia Tech Services product: Thompson's Station, TN government transparency (meetings, votes, elections). Fork of OpenCouncil. Staging: `glasshouse.greerso.com`. Hosted on **Openship**. Coolify is not the control plane. Do not mix with Magnolia Photos.
+
 ## Development Environment
 
 Run commands (`npm`, `npx`, etc.) directly. Optionally, use `nix develop` for a reproducible shell with all dependencies pinned.
